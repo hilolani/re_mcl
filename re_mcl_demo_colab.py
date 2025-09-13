@@ -20,7 +20,7 @@ print(re_mcl.scalefree)
 print(re_mcl.homophilly)
 print(re_mcl.heterophilly)
 
-mtxlist = [mif.gadget,mif.karateclub,mif.erdosReny,mif.scalefree,mif.homophilly,mif.heterophilly]
+mtxlist = [re_mcl.gadget,re_mcl.karateclub,re_mcl.erdosReny,re_mcl.scalefree,re_mcl.homophilly,re_mcl.heterophilly]
 [adjanceyinfocheck(i) for i in mtxlist]
 
 mclprocess(re_mcl.karateclub)
