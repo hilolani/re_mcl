@@ -1,0 +1,6 @@
+include re_mcl/data/gadget.mtx
+include re_mcl/data/ErdosReny.mtx
+include re_mcl/data/heterophilly.mtx
+include re_mcl/data/homophilly.mtx
+include re_mcl/data/karateclub.mtx
+include re_mcl/data/scalefree.mtx
