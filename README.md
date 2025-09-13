@@ -9,6 +9,7 @@ We plan to implement Recurrent MCL (RMCL) and Latent adjacency clustering, devel
 References
 
 Stijn van Dongen, Graph Clustering by Flow Simulation, 2000
+
 https://dspace.library.uu.nl/bitstream/handle/1874/848/full.pdf?sequence=1&isAllowed=y
 
 Jaeyoung Jung and Hiroyuki Akama. 2008. Employing Latent Adjacency for Appropriate Clusteringof Semantic Networks. New Trends in Psychometrics p.131-140
