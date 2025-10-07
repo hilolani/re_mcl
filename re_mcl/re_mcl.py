@@ -154,11 +154,12 @@ def mclprocess(adjancencymatrix, stepnum = 10):
     stmat = inflation(expansion(rescaling(prepro(adjancencymatrix))))
     rwmat = stmat
     while steps < stepnum:
-        convergence, clusinfo, clustersatthisstep = get_soft_clusters_proto(rwmat)
+        convergence, clustersatthisstep = get_soft_clusters_proto(rwmat)
         if convergence == False:
             rwmat = inflation(expansion(rwmat))
         else:
             print('Convergence:{}'.format(convergence))
             print('Cluster list:{}'.format(clustersatthisstep))
             print('To get more information, run "!cat mcl_results.log"')
+            return clustersatthisstep
             break
