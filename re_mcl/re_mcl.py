@@ -161,5 +161,5 @@ def mclprocess(adjancencymatrix, stepnum = 10):
             print('Convergence:{}'.format(convergence))
             print('Cluster list:{}'.format(clustersatthisstep))
             print('To get more information, run "!cat mcl_results.log"')
-            return clustersatthisstep
+            return convergence, clustersatthisstep
             break
