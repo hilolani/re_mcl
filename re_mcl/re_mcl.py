@@ -149,9 +149,9 @@ def get_soft_clusters_proto(adjacencymatrix, threshold=1e-6, eps=1e-12):
     mcl_logger.info('Cluster list:{}'.format(clustersatthisstep))
     return convergence,clusinfo, clustersatthisstep
 
-def mclprocess(adjancencymatrix, stepnum = 10):
+def mclprocess(adjacencymatrix, stepnum = 10):
     steps = 0
-    stmat = inflation(expansion(rescaling(prepro(adjancencymatrix))))
+    stmat = inflation(expansion(rescaling(prepro(adjacencymatrix))))
     rwmat = stmat
     while steps < stepnum:
         convergence, clusinfo, clustersatthisstep = get_soft_clusters_proto(rwmat)
@@ -163,3 +163,4 @@ def mclprocess(adjancencymatrix, stepnum = 10):
             print('To get more information, run "!cat mcl_results.log"')
             return clustersatthisstep
             break
+        steps = steps + 1
