@@ -49,7 +49,7 @@ def load_adjmats(return_X_y=False, as_frame=False, scaled=False):
         DESCR="This is a toy dataset consisting of six sparse matrices in Matrix Market format."
     )
 
-def adjanceyinfocheck(adjacencymatrix):
+def adjacencyinfocheck(adjacencymatrix):
     if isinstance(adjacencymatrix, np.ndarray):
         print("The graph is given as a dense matrix.")
         adj_matrix = csr_matrix(adjacencymatrix)
@@ -65,38 +65,38 @@ def adjanceyinfocheck(adjacencymatrix):
     else:
         raise ValueError("Unsupported format or indexing. This function is designed to work with sparse matrix files created in languages that use 0-based indexing. If there is something wrong, check the indexing of your sparse matrix.")
 
-def prepro(adjancencymatrix):
-  adj_matrix = adjanceyinfocheck(adjancencymatrix)
+def prepro(adjacencymatrix):
+  adj_matrix = adjacencyinfocheck(adjacencymatrix)
   adj_matrix_original = adj_matrix.copy()
   adj_matrix = adj_matrix.transpose()
   adj_matrix = adj_matrix + csr_matrix(np.eye(np.shape(adj_matrix)[0]))
   return adj_matrix
 
-def rescaling(adjancencymatrix):
+def rescaling(adjacencymatrix):
    #adj_matrix = transition(prepro(mif.karateclub))
-   adj_matrix = adjancencymatrix.copy()
+   adj_matrix = adjacencymatrix.copy()
    col_sums = np.array(adj_matrix.sum(axis=0)).ravel()
    col_sums[col_sums == 0] = 1
    inv_col_sums = 1.0 / col_sums
    scaling_matrix = csc_matrix(np.diag(inv_col_sums))
    return adj_matrix @ scaling_matrix
 
-def expansion(adjancencymatrix):
-  #adj_matrix = prepro(adjancencymatrix)
-  adj_matrix = adjancencymatrix.copy()
+def expansion(adjacencymatrix):
+  #adj_matrix = prepro(adjacencymatrix)
+  adj_matrix = adjacencymatrix.copy()
   expanded_adj_matrix = adj_matrix @ adj_matrix
   return expanded_adj_matrix
 
-def hadamardpower(adjancencymatrix):
+def hadamardpower(adjacencymatrix):
   #adj_matrix = transition(prepro(mif.karateclub))
-  adj_matrix = adjancencymatrix.copy()
+  adj_matrix = adjacencymatrix.copy()
   hd = np.square(adj_matrix.data)
   adj_matrix.data = hd
   return adj_matrix
 
-def inflation(adjancencymatrix):
+def inflation(adjacencymatrix):
   #adj_matrix = transition(prepro(mif.karateclub))
-  adj_matrix = adjancencymatrix.copy()
+  adj_matrix = adjacencymatrix.copy()
   hadamarded = hadamardpower(adj_matrix)
   inflated = rescaling(hadamarded)
   return inflated
