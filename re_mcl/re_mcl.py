@@ -18,6 +18,7 @@ from . import data  # re_mcl/data/
 import shutil
 from math import isclose
 import logging
+import io
 
 formatter = logging.Formatter("%(asctime)s [MCL] %(message)s", "%Y-%m-%d %H:%M:%S")
 result_handler = logging.FileHandler("mcl_results.log", mode="w", encoding="utf-8")
