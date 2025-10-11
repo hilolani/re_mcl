@@ -166,3 +166,59 @@ def mclprocess(adjacencymatrix, stepnum = 20):
             return clustersatthisstep
             break
         steps = steps + 1
+
+def rmcl_basic(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=1.0):
+    originadj =  mtx_originadj
+    mmoriginadj = mmread(originadj)
+    cluslist = dic_mclresult
+    clusmemlist=[cluslist[i] for i in range(len(cluslist))]
+    clussizelist = [len(j) for j in clusmemlist]
+    corecluscandlist = np.where(np.array(clussizelist)>np.mean(clussizelist) + 2*np.std(clussizelist).tolist())[0].tolist()
+    if corecluscandlist==[]:
+        mcl_logger.info('Warning:{}'.format("There is no core cluster, so no need to run rmcl."))
+        print('Warning:{}'.format("There is no core cluster, so no need to run rmcl."))
+    else:
+        corecluscanddata = list(zip(corecluscandlist,[clussizelist[i] for i in corecluscandlist]))
+        defaultcore = defaultcorenum
+        coreclusternumber = corecluscanddata[defaultcore][0]
+        G = nx.from_scipy_sparse_array(mmoriginadj)
+        deginfo = G.degree
+        clusmemdeginfo = [[deginfo[i] for i in clusmemlist[j]] for j in range(len(clusmemlist))]
+        max_indices = [np.argwhere(i == np.max(i)).flatten().tolist() for i in clusmemdeginfo]
+        allrepresentnodeslist = [clusmemlist[i][max_indices[i][0]] for i in range(len(max_indices))]
+        allbutcorerepresentnodeslist = [elem for i, elem in enumerate(allrepresentnodeslist) if i !=coreclusternumber]
+        coreclustermember = clusmemlist[coreclusternumber]
+        coreclusterbutrepresentmember = [elem for i, elem in enumerate(coreclustermember) if elem != allrepresentnodeslist[coreclusternumber]]
+        comblist = list(itertools.product(coreclusterbutrepresentmember,allbutcorerepresentnodeslist))
+        values = {(i, j): v for i, j, v in zip(mmoriginadj.row, mmoriginadj.col, mmoriginadj.data)}
+        results = [values.get(comblist, 0.0) for comblist in comblist]
+        coreclusbutrepresentrow = list(range(len(coreclusterbutrepresentmember)))
+        allbutcoreclusrepresentcol = [i + coreclusbutrepresentrow[-1] + 1 for i in list(range(len(allbutcorerepresentnodeslist)))]
+        corresrow = list(zip(coreclusterbutrepresentmember,coreclusbutrepresentrow))
+        correscol = list(zip(allbutcorerepresentnodeslist,allbutcoreclusrepresentcol))
+        focusedcomblist = list(itertools.product(coreclusbutrepresentrow, allbutcoreclusrepresentcol))
+        rows, cols = zip(*focusedcomblist)
+        focusedshape = len(coreclusterbutrepresentmember) + len(allbutcorerepresentnodeslist)
+        focuesd_sparse_mat = coo_matrix((results, (rows, cols)), shape=(focusedshape,focusedshape))
+        focusedlatentadj = focuesd_sparse_mat*focuesd_sparse_mat.T
+        focusedlatentadj = focusedlatentadj.tocoo()
+        focusedlatentadj = coo_matrix((focusedlatentadj.data, (focusedlatentadj.row, focusedlatentadj.col)), shape=(len(coreclusterbutrepresentmember),len(coreclusterbutrepresentmember)))
+        focusedlatentadj.setdiag(0.0)
+        focusedlatentadj.eliminate_zeros()
+        tmpla = focusedlatentadj.copy()
+        thresp = threspruning
+        tmpla.data = np.where(tmpla.data < thresp, 0.0, 1.0)
+        tmpla.eliminate_zeros()
+        tmplacsr=tmpla.tocsr()
+        mcl_logger.info('RMCL:{}'.format("RMCL will start soon."))
+        rmclresult = mclprocess(tmplacsr)
+        print(f"rmcresult:{rmclresult}")
+        if rmclresult==None:
+            mcl_logger.info('Warning:{}'.format("RMCL not possible."))
+            print('Warning:{}'.format("RMCL not possible."))
+        else:
+            corecluscorespond = list(zip(coreclusterbutrepresentmember,coreclusbutrepresentrow))
+            mapping = {v: k for k, v in dict(corecluscorespond).items()}
+            finalrmclresult = {k: [mapping[x] for x in v if x in mapping] for k, v in rmclresult.items()}
+            mcl_logger.info('Final result of rmcl after renumbering--core reclustering:{}'.format(finalrmclresult))
+            print(f"Final result of rmcl after renumbering--core reclustering: {finalrmclresult}")
