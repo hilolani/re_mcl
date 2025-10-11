@@ -3,8 +3,19 @@ This is a Python program for Markov Clustering (MCL) that supports not only dens
 
 pip install git+https://github.com/hilolani/re_mcl.git
 
-to use this program.
-We plan to implement Recurrent MCL (RMCL) and Latent adjacency clustering, developed at the former Akama Laboratory at Tokyo Institute of Technology, in this repository going forward.
+to use this program. 
+
+Several adjacent matrices for demonstration purposes are stored in this repository as Matrix Market mtx files and can be used for calculations such as MCL as follows.
+
+from re_mcl import *
+re_mcl= load_adjmats()
+mtxlist = [re_mcl.gadget,re_mcl.karateclub,re_mcl.erdosReny,re_mcl.scalefree,re_mcl.homophilly,re_mcl.heterophilly,re_mcl.eat]
+mclprocess(re_mcl.karateclub)
+
+In addition to the conventional MCL, Recurrent MCL (RMCL), developed at the former Akama Laboratory at Tokyo Institute of Technology, has been implemented in this repository and can be computed as follows with the new function of rmcl_basic().
+
+cluslist = mclprocess(re_mcl.scalefree, 20)
+rmcl_basic(cluslist,re_mcl.scalefree)#The core cluster is divided based on the algorithm of RMCL.
 
 References
 
