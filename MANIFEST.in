@@ -5,3 +5,4 @@ include re_mcl/data/homophilly.mtx
 include re_mcl/data/karateclub.mtx
 include re_mcl/data/scalefree.mtx
 include re_mcl/data/eat.mtx
+include mif/data/eatwords.csv
