@@ -21,6 +21,7 @@ import logging
 import io
 import json
 import pickle
+import sys
 
 formatter = logging.Formatter("%(asctime)s [MCL] %(message)s", "%Y-%m-%d %H:%M:%S")
 result_handler = logging.FileHandler("mcl_results.log", mode="w", encoding="utf-8")
