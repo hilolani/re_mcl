@@ -22,14 +22,7 @@ import io
 import json
 import pickle
 import sys
-
-formatter = logging.Formatter("%(asctime)s [MCL] %(message)s", "%Y-%m-%d %H:%M:%S")
-result_handler = logging.FileHandler("mcl_results.log", mode="w", encoding="utf-8")
-result_handler.setFormatter(formatter)
-mcl_logger = logging.getLogger("mcl_results")
-mcl_logger.setLevel(logging.INFO)
-mcl_logger.addHandler(result_handler)
-mcl_logger.propagate = False
+from typing import Optional, Dict
 
 #If you use a Google Colab user, run the following.
 #from google.colab import drive
@@ -40,6 +33,49 @@ def fileOnColab(filename, basepath = "/content/drive/My Drive/Colab Notebooks"):
     filepath = os.path.join(basepath, filename)
     print(filepath)
     return filepath
+
+formatter = logging.Formatter("%(asctime)s [%(name)s] %(message)s", "%Y-%m-%d %H:%M:%S")
+logger_a = logging.getLogger("MiF")
+logger_a.setLevel(logging.INFO)
+
+fh_a = logging.FileHandler("MiF.log", mode="w", encoding="utf-8")
+fh_a.setFormatter(formatter)
+ch_a = logging.StreamHandler(sys.stdout)
+ch_a.setFormatter(formatter)
+
+logger_a.addHandler(fh_a)
+logger_a.addHandler(ch_a)
+logger_a.propagate = False
+
+logger_b = logging.getLogger("MatrixLoader")
+logger_b.setLevel(logging.INFO)
+
+fh_b = logging.FileHandler("matrix.log", mode="w", encoding="utf-8")
+fh_b.setFormatter(formatter)
+ch_b = logging.StreamHandler(sys.stdout)
+ch_b.setFormatter(formatter)
+
+logger_b.addHandler(fh_b)
+logger_b.addHandler(ch_b)
+logger_b.propagate = False
+
+logger_c = logging.getLogger("re_mcl")
+logger_c.setLevel(logging.INFO)
+
+fh_c = logging.FileHandler("re_mcl.log", mode="w", encoding="utf-8")
+fh_c.setFormatter(formatter)
+ch_c = logging.StreamHandler(sys.stdout)
+ch_c.setFormatter(formatter)
+
+logger_c.addHandler(fh_c)
+logger_c.addHandler(ch_c)
+logger_c.propagate = False
+
+def resolve_logger(logger: Optional[logging.Logger], context: str) -> logging.Logger:
+    return logger if logger is not None else get_logger(context)
+
+
+
 
 def load_adjmats(return_X_y=False, as_frame=False, scaled=False):
     base_path = os.path.join(os.path.dirname(__file__), "data")    
