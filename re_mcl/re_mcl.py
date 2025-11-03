@@ -74,8 +74,16 @@ logger_c.propagate = False
 def resolve_logger(logger: Optional[logging.Logger], context: str) -> logging.Logger:
     return logger if logger is not None else get_logger(context)
 
-
-
+def get_logger(context: str) -> logging.Logger:
+    context = context.lower()
+    if context in ("mif", "mifdi", "distance", "similarity"):
+        return logger_a
+    elif context in ("matrix", "loader", "io"):
+        return logger_b
+    elif context in ("mcl", "re_mcl", "rmcl"):
+        return logger_c    
+    else:
+        raise ValueError(f"Unknown logging context: {context}")
 
 def load_adjmats(return_X_y=False, as_frame=False, scaled=False):
     base_path = os.path.join(os.path.dirname(__file__), "data")    
@@ -90,52 +98,59 @@ def load_adjmats(return_X_y=False, as_frame=False, scaled=False):
         DESCR="This is a toy dataset consisting of six sparse matrices in Matrix Market format."
     )
 
-def adjacencyinfocheck_old(adjacencymatrix):
-    if isinstance(adjacencymatrix, np.ndarray):
-        print("The graph is given as a dense matrix.")
-        adj_matrix = csr_matrix(adjacencymatrix)
-        return adj_matrix
-    elif isspmatrix_csr(adjacencymatrix):
-        #print("The graph is given as a sparse matrix with the csr format.")
-        adj_matrix = adjacencymatrix
-        return adj_matrix
-    elif adjacencymatrix.endswith(".mtx"):
-        print("The graph is given under the format of MatrixMarket with 0-based indexes.")
-        adj_matrix = mmread(adjacencymatrix).tocsr()
-        return adj_matrix
-    else:
-        raise ValueError("Unsupported format or indexing. This function is designed to work with sparse matrix files created in languages that use 0-based indexing. If there is something wrong, check the indexing of your sparse matrix.")
+def load_mif(return_X_y=False, as_frame=False, scaled=False):
+    base_path = os.path.join(os.path.dirname(__file__), "data")    
+    return Bunch(
+        erdosReny = os.path.join(base_path, "ErdosReny.mtx"),
+        gadget = os.path.join(base_path, "gadget.mtx"),
+        heterophilly = os.path.join(base_path, "heterophilly.mtx"),
+        homophilly = os.path.join(base_path, "homophilly.mtx"),
+        karateclub = os.path.join(base_path, "karateclub.mtx"),
+        scalefree = os.path.join(base_path, "scalefree.mtx"),
+        eat = os.path.join(base_path, "eat.mtx"),
+        DESCR="This is a toy dataset consisting of six sparse matrices in Matrix Market format."
+    )
 
-def adjacencyinfocheck(adjacencymatrix, logger=None):
-  path_or_matrix = adjacencymatrix
-  if isinstance(path_or_matrix, str) and os.path.exists(path_or_matrix):
+
+class SafeCSR(csr_matrix):
+    def __repr__(self):
+        return f"<SafeCSR shape={self.shape}, nnz={self.nnz}, dtype={self.dtype}>"
+
+    __str__ = __repr__ 
+
+def adjacencyinfocheck(adjacencymatrix, logger = None):
+    log = resolve_logger(logger, "matrix")
+    print(f"log name: {log.name}")
+    path_or_matrix = adjacencymatrix
+    src = path_or_matrix if isinstance(path_or_matrix, str) else "<in-memory>"
+    
+    if isinstance(path_or_matrix, str) and os.path.exists(path_or_matrix):
         path = path_or_matrix
         ext = os.path.splitext(path)[1].lower()
-        if logger:
-            logger.info(f"Loading matrix from file: {path}")
+
         if ext == ".mtx":
             matrix = mmread(path).tocsr()
-            if logger: logger.info("Loaded .mtx file → CSR.")
-            return matrix
+            log.info("Loaded .mtx file → CSR.")
+
         elif ext == ".npz":
             loaded = np.load(path, allow_pickle=True)
             if 'data' in loaded and 'indices' in loaded and 'indptr' in loaded:
                 matrix = load_npz(path).tocsr()
-                if logger: logger.info("Loaded sparse .npz file → CSR.")
-                return matrix
+                log.info("Loaded sparse .npz file → CSR.") 
             else:
                 matrix = csr_matrix(loaded['arr_0'])
-                if logger: logger.info("Loaded dense .npz file → CSR.")
-                return matrix
+                log.info("Loaded dense .npz file → CSR.")
+                
         elif ext == ".pkl":
             with open(path, "rb") as f:
                 obj = pickle.load(f)
-                return adjacencyinfocheck(obj, logger=logger)
+                matrix =adjacencyinfocheck(obj)
+                
         elif ext == ".csv":
             arr = np.loadtxt(path, delimiter=",")
             matrix = csr_matrix(arr)
-            if logger: logger.info("Loaded .csv file → CSR.")
-            return matrix
+            log.info("Loaded .csv file → CSR.")
+            
         elif ext == ".json":
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -145,81 +160,103 @@ def adjacencyinfocheck(adjacencymatrix, logger=None):
                 vals = np.array(data["data"], dtype=np.float64)
                 shape = tuple(data["shape"])
                 matrix = coo_matrix((vals, (row, col)), shape=shape).tocsr()
-                if logger: logger.info("Loaded sparse JSON (COO format) → CSR.")
-                return matrix
+                log.info("Loaded sparse JSON (COO format) → CSR.")
             else:
                 arr = np.array(data, dtype=np.float64)
                 matrix = csr_matrix(arr)
-                if logger: logger.info("Loaded dense JSON → CSR.")
-                return matrix
+                log.info("Loaded dense JSON → CSR.")
+                
         else:
             msg = f"Unsupported file extension: {ext}"
-            if logger: logger.error(msg)
+            log.error(msg)
             raise ValueError(msg)
-  matrix = path_or_matrix
-  if isinstance(matrix, csr_matrix):
-      if logger: logger.info("Matrix is already CSR format.")
-      return matrix
-  elif issparse(matrix):
-      if logger: logger.info(f"Converting {type(matrix).__name__} → CSR.")
-      return matrix.tocsr()
-  elif isinstance(matrix, np.ndarray):
-      if logger: logger.info("Converting ndarray → CSR.")
-      return csr_matrix(matrix)
-  else:
-      msg = f"Unsupported input type: {type(matrix)}"
-      if logger: logger.error(msg)
-      raise TypeError(msg)
+
+    else:
+        matrix = path_or_matrix
+
+        if isinstance(matrix, csr_matrix):
+          log.info(f"Matrix is already CSR format (shape={matrix.shape}, nnz={matrix.nnz})")
+          
+        elif issparse(matrix):
+          matrix = csr_matrix(matrix)  
+          log.info(f"Converting {type(matrix).__name__} to CSR format (shape={matrix.shape}, nnz={matrix.nnz})")
+         
+        elif isinstance(matrix, np.ndarray):
+          matrix = csr_matrix(matrix)    
+          log.info(f"Converting dense ndarray to CSR format (shape={matrix.shape})")
+          
+        else:
+          msg = f"Unsupported input type: {type(matrix)}"
+          log.error(msg)
+          raise TypeError(msg)
+
+    log.info(f"Matrix loaded successfully (type={type(matrix).__name__}, shape={matrix.shape}, nnz={matrix.nnz})") 
+    return SafeCSR(matrix)
       
-def prepro(adjacencymatrix):
-  adj_matrix = adjacencyinfocheck(adjacencymatrix)
-  adj_matrix_original = adj_matrix.copy()
-  adj_matrix = adj_matrix.transpose()
-  adj_matrix = adj_matrix + csr_matrix(np.eye(np.shape(adj_matrix)[0]))
-  return adj_matrix
+def prepro(adjacencymatrixchecked, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    adj_matrix = adjacencymatrixchecked
+    adj_matrix_original = adj_matrix.copy()
+    adj_matrix = adj_matrix.transpose()
+    adj_matrix = adj_matrix + csr_matrix(np.eye(np.shape(adj_matrix)[0]))
+    log.info(f"Preprocessing--transposing and adding self-loop-- done.")
+    return adj_matrix
 
-def rescaling(adjacencymatrix):
-   #adj_matrix = transition(prepro(mif.karateclub))
-   adj_matrix = adjacencymatrix.copy()
-   col_sums = np.array(adj_matrix.sum(axis=0)).ravel()
-   col_sums[col_sums == 0] = 1
-   inv_col_sums = 1.0 / col_sums
-   scaling_matrix = csc_matrix(np.diag(inv_col_sums))
-   return adj_matrix @ scaling_matrix
+def rescaling(adjacencymatrixchecked, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    adj_matrix = adjacencymatrixchecked.copy()
+    col_sums = np.array(adj_matrix.sum(axis=0)).ravel()
+    col_sums[col_sums == 0] = 1
+    inv_col_sums = 1.0 / col_sums
+    scaling_matrix = csc_matrix(np.diag(inv_col_sums))
+    log.info(f"rescaling done.")
+    return adj_matrix @ scaling_matrix
 
-def expansion(adjacencymatrix):
-  #adj_matrix = prepro(adjacencymatrix)
-  adj_matrix = adjacencymatrix.copy()
-  expanded_adj_matrix = adj_matrix @ adj_matrix
-  return expanded_adj_matrix
+def expansion(adjacencymatrixchecked, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    adj_matrix = adjacencymatrixchecked.copy()
+    expanded_adj_matrix = adjacencymatrixchecked @ adj_matrix
+    log.info(f"expansion done.")
+    return expanded_adj_matrix
 
-def hadamardpower(adjacencymatrix):
-  #adj_matrix = transition(prepro(mif.karateclub))
-  adj_matrix = adjacencymatrix.copy()
-  hd = np.square(adj_matrix.data)
-  adj_matrix.data = hd
-  return adj_matrix
+def hadamardpower(adjacencymatrixchecked, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    adj_matrix = adjacencymatrixchecked.copy()
+    hd = np.square(adjacencymatrixchecked.data)
+    adj_matrix.data = hd
+    log.info(f"hadamard power computed.")
+    return adj_matrix
 
-def inflation(adjacencymatrix):
-  #adj_matrix = transition(prepro(mif.karateclub))
-  adj_matrix = adjacencymatrix.copy()
-  hadamarded = hadamardpower(adj_matrix)
-  inflated = rescaling(hadamarded)
-  return inflated
+def inflation(adjacencymatrixchecked, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    adj_matrix = adjacencymatrixchecked.copy()
+    hadamarded = hadamardpower(adj_matrix)
+    inflated = rescaling(hadamarded)
+    log.info(f"inflation done.")
+    return inflated
 
-def normalizedq(adjacencymatrix):
-    adj_matrix = adjacencymatrix.copy()
+def normalizedq(adjacencymatrixchecked, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    adj_matrix =adjacencymatrixchecked.copy()
     col_sums = np.array(adj_matrix.sum(axis=0)).ravel()
     if np.allclose(col_sums, 1.0, atol=1e-12, rtol=0.0):
-        print("Rescaled.")
+        log.info(f"Rescaled.")
         result = True
     else:
-        print("Not rescaled.")
+        log.info(f"Not rescaled.")
         result = False
     return result
 
-def get_soft_clusters_proto(adjacencymatrix, threshold=1e-6, eps=1e-12):
-    adj_matrix = adjacencymatrix.copy()
+def get_soft_clusters_proto(adjacencymatrixchecked, threshold=1e-6, eps=1e-12, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    adj_matrix = adjacencymatrixchecked.copy()
     adj_matrix_csc = adj_matrix if isinstance(adj_matrix, csc_matrix) else adj_matrix.tocsc(copy=False)
     col_sums = np.array(adj_matrix_csc.sum(axis=0)).ravel()
     zero_rows =np.where(adj_matrix_csc.getnnz(axis=1) == 0)[0]
@@ -237,50 +274,62 @@ def get_soft_clusters_proto(adjacencymatrix, threshold=1e-6, eps=1e-12):
         flag[members] = 1.0
         clusters.append(flag)
     if len(clusters) == 0:
-        print("No seed rows over threshold. (No clusters at this step.)")
+        log.info(f"No seed rows over threshold. (No clusters at this step.)")
         return {}, {}
     flags = np.vstack(clusters)
     overlapinfo = flags.sum(axis=0)
     if overlapinfo.max() > 1 + eps:
-        print("Soft clusters are recorded at this step. Continue.")
+        log.info(f"Soft clusters are recorded at this step. Continue.")
         convergence = False
     else:
-        print("Hard clusters are gotten at this step (no overlaps). Stop.")
+        log.info(f"Hard clusters are gotten at this step (no overlaps). Stop.")
         convergence = True
     clusinfo = {k: flags[k, :].tolist() for k in range(flags.shape[0])}
     clustersatthisstep = {k: np.where(flags[k, :] > 0.5)[0].tolist()
                           for k in range(flags.shape[0])}
-    mcl_logger.info('Convergence:{}'.format(convergence))
-    mcl_logger.info('Cluster Matrix:{}'.format(clusinfo))
-    mcl_logger.info('Cluster list:{}'.format(clustersatthisstep))
+    log.info(f"Convergence: {convergence}")
+    log.info(f"Cluster Matrix: {clusinfo}")
+    log.info(f"Cluster list: {clustersatthisstep}")
     return convergence,clusinfo, clustersatthisstep
 
-def mclprocess(adjacencymatrix, stepnum = 20):
+def mclprocess(adjacencymatrixchecked, stepnum = 20, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
     steps = 0
-    stmat = inflation(expansion(rescaling(prepro(adjacencymatrix))))
+    stmat = inflation(expansion(rescaling(prepro(adjacencymatrixchecked))))
     rwmat = stmat
     while steps < stepnum:
         convergence, clusinfo, clustersatthisstep = get_soft_clusters_proto(rwmat)
         if convergence == False:
             rwmat = inflation(expansion(rwmat))
         else:
-            print('Convergence:{}'.format(convergence))
-            print('Cluster list:{}'.format(clustersatthisstep))
-            print('To get more information, run "!cat mcl_results.log"')
+            print(f"Convergence: {convergence}")
+            print(f"Cluster list: {clustersatthisstep}")
             return clustersatthisstep
             break
         steps = steps + 1
 
-def rmcl_basic(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=1.0):
-    originadj =  mtx_originadj
-    mmoriginadj = mmread(originadj)
+def save_safe_csr_to_mtx(safecsrmatrix, path: str, logger=None):
+    log = logger or logging.getLogger(__name__)
+    if hasattr(safecsrmatrix, "_csr"):
+        safecsrmatrix = safecsrmatrix._csr
+    if not isinstance(safecsrmatrix, csr_matrix):
+        raise TypeError(f"Expected csr_matrix or SafeCSR, got {type(matrix).__name__}")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    mmwrite(path, safecsrmatrix)
+    log.info(f"Saved CSR matrix to {path}")
+
+def rmcl_basic(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=1.0, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    originadj =  mtx_originadj#point.
+    mmoriginadj = mmread(originadj)#point.
     cluslist = dic_mclresult
     clusmemlist=[cluslist[i] for i in range(len(cluslist))]
     clussizelist = [len(j) for j in clusmemlist]
     corecluscandlist = np.where(np.array(clussizelist)>np.mean(clussizelist) + 2*np.std(clussizelist).tolist())[0].tolist()
     if corecluscandlist==[]:
-        mcl_logger.info('Warning:{}'.format("There is no core cluster, so no need to run rmcl."))
-        print('Warning:{}'.format("There is no core cluster, so no need to run rmcl."))
+        log.info(f"Warning: There is no core cluster, so no need to run rmcl.")
     else:
         corecluscanddata = list(zip(corecluscandlist,[clussizelist[i] for i in corecluscandlist]))
         defaultcore = defaultcorenum
@@ -314,15 +363,13 @@ def rmcl_basic(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=1.0)
         tmpla.data = np.where(tmpla.data < thresp, 0.0, 1.0)
         tmpla.eliminate_zeros()
         tmplacsr=tmpla.tocsr()
-        mcl_logger.info('RMCL:{}'.format("RMCL will start soon."))
+        log.info(f"RMCL: RMCL will start soon.")
         rmclresult = mclprocess(tmplacsr)
-        print(f"rmcresult:{rmclresult}")
+        log.info(f"rmcresult: {rmclresult}")
         if rmclresult==None:
-            mcl_logger.info('Warning:{}'.format("RMCL not possible."))
-            print('Warning:{}'.format("RMCL not possible."))
+            log.info(f"Warning: RMCL not possible.")
         else:
             corecluscorespond = list(zip(coreclusterbutrepresentmember,coreclusbutrepresentrow))
             mapping = {v: k for k, v in dict(corecluscorespond).items()}
             finalrmclresult = {k: [mapping[x] for x in v if x in mapping] for k, v in rmclresult.items()}
-            mcl_logger.info('Final result of rmcl after renumbering--core reclustering:{}'.format(finalrmclresult))
-            print(f"Final result of rmcl after renumbering--core reclustering: {finalrmclresult}")
+            log.info(f"Final result of rmcl after renumbering--core reclustering: {finalrmclresult}")
