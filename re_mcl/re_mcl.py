@@ -322,8 +322,8 @@ def save_safe_csr_to_mtx(safecsrmatrix, path: str, logger=None):
 def rmcl_basic(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=1.0, logger = None):
     log = resolve_logger(logger, "mcl")
     print(f"log name: {log.name}")
-    originadj =  mtx_originadj#point.
-    mmoriginadj = mmread(originadj)#point.
+    originadj =  mtx_originadj
+    mmoriginadj = mmread(originadj)
     cluslist = dic_mclresult
     clusmemlist=[cluslist[i] for i in range(len(cluslist))]
     clussizelist = [len(j) for j in clusmemlist]
