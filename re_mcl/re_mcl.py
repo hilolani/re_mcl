@@ -373,3 +373,6 @@ def rmcl_basic(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=1.0,
             mapping = {v: k for k, v in dict(corecluscorespond).items()}
             finalrmclresult = {k: [mapping[x] for x in v if x in mapping] for k, v in rmclresult.items()}
             log.info(f"Final result of rmcl after renumbering--core reclustering: {finalrmclresult}")
+
+def rmcl_branching(*args, **kwargs):
+    return rmcl_basic(*args, **kwargs)
