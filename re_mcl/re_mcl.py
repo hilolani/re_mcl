@@ -352,7 +352,6 @@ def rmcl_branching(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=
         mapping = {v: k for k, v in dict(corecluscorespond).items()}
         comblist = list(itertools.product(coreclusterbutrepresentmember,allbutcorerepresentnodeslist))
         results = [values.get(comblist, 0.0) for comblist in comblist]
-        rows0, cols0 = zip(*comblist)
         focusedcomblist = list(itertools.product(coreclusbutrepresentrow, allbutcoreclusrepresentcol))
         rows, cols = zip(*focusedcomblist)
         cols = tuple([x - allbutcoreclusrepresentcol[0] for x in cols])
