@@ -319,7 +319,7 @@ def save_safe_csr_to_mtx(safecsrmatrix, path: str, logger=None):
     mmwrite(path, safecsrmatrix)
     log.info(f"Saved CSR matrix to {path}")
 
-def rmcl_basic(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=1.0, logger = None):
+def rmcl_branching(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=1.0, reverse = False, logger = None):
     log = resolve_logger(logger, "mcl")
     print(f"log name: {log.name}")
     originadj =  mtx_originadj
@@ -331,6 +331,7 @@ def rmcl_basic(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=1.0,
     if corecluscandlist==[]:
         log.info(f"Warning: There is no core cluster, so no need to run rmcl.")
     else:
+        thresp = threspruning
         corecluscanddata = list(zip(corecluscandlist,[clussizelist[i] for i in corecluscandlist]))
         defaultcore = defaultcorenum
         coreclusternumber = corecluscanddata[defaultcore][0]
@@ -342,37 +343,43 @@ def rmcl_basic(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=1.0,
         allbutcorerepresentnodeslist = [elem for i, elem in enumerate(allrepresentnodeslist) if i !=coreclusternumber]
         coreclustermember = clusmemlist[coreclusternumber]
         coreclusterbutrepresentmember = [elem for i, elem in enumerate(coreclustermember) if elem != allrepresentnodeslist[coreclusternumber]]
-        comblist = list(itertools.product(coreclusterbutrepresentmember,allbutcorerepresentnodeslist))
         values = {(i, j): v for i, j, v in zip(mmoriginadj.row, mmoriginadj.col, mmoriginadj.data)}
-        results = [values.get(comblist, 0.0) for comblist in comblist]
         coreclusbutrepresentrow = list(range(len(coreclusterbutrepresentmember)))
         allbutcoreclusrepresentcol = [i + coreclusbutrepresentrow[-1] + 1 for i in list(range(len(allbutcorerepresentnodeslist)))]
         corresrow = list(zip(coreclusterbutrepresentmember,coreclusbutrepresentrow))
         correscol = list(zip(allbutcorerepresentnodeslist,allbutcoreclusrepresentcol))
+        corecluscorespond = list(zip(coreclusterbutrepresentmember,coreclusbutrepresentrow))
+        mapping = {v: k for k, v in dict(corecluscorespond).items()}
+        comblist = list(itertools.product(coreclusterbutrepresentmember,allbutcorerepresentnodeslist))
+        results = [values.get(comblist, 0.0) for comblist in comblist]
+        rows0, cols0 = zip(*comblist)
         focusedcomblist = list(itertools.product(coreclusbutrepresentrow, allbutcoreclusrepresentcol))
         rows, cols = zip(*focusedcomblist)
-        focusedshape = len(coreclusterbutrepresentmember) + len(allbutcorerepresentnodeslist)
-        focuesd_sparse_mat = coo_matrix((results, (rows, cols)), shape=(focusedshape,focusedshape))
-        focusedlatentadj = focuesd_sparse_mat*focuesd_sparse_mat.T
-        focusedlatentadj = focusedlatentadj.tocoo()
-        focusedlatentadj = coo_matrix((focusedlatentadj.data, (focusedlatentadj.row, focusedlatentadj.col)), shape=(len(coreclusterbutrepresentmember),len(coreclusterbutrepresentmember)))
+        cols = tuple([x - allbutcoreclusrepresentcol[0] for x in cols])
+        focuesd_sparse_mat = coo_matrix((results, (rows, cols)), shape=(len(coreclusterbutrepresentmember),len(allbutcorerepresentnodeslist)))
+        log.info(f"focuesd_sparse_mat size is: {focuesd_sparse_mat.shape[0]}, {focuesd_sparse_mat.shape[1]}")
+        focuesd_sparse_mat_csr = focuesd_sparse_mat.tocsr()
+        if reverse == False:
+            log.info("reverse: False. We are running branching MCL.")
+            algorithm = "branching mcl as core reclustering"
+            focusedlatentadj=focuesd_sparse_mat_csr @ focuesd_sparse_mat_csr.T
+        elif reverse == True:
+            log.info("reverse: True. We are running reverse branching MCL.")
+            algorithm = "reverse branching mcl as non-core reclustering"
+            focusedlatentadj=focuesd_sparse_mat_csr.T @ focuesd_sparse_mat_csr
+        print(f"The shape of the rmcl target csr matrix : {focusedlatentadj.shape}.")
+        focusedlatentadj.data[focusedlatentadj.data < thresp] = 0.0
         focusedlatentadj.setdiag(0.0)
         focusedlatentadj.eliminate_zeros()
-        tmpla = focusedlatentadj.copy()
-        thresp = threspruning
-        tmpla.data = np.where(tmpla.data < thresp, 0.0, 1.0)
-        tmpla.eliminate_zeros()
-        tmplacsr=tmpla.tocsr()
+        log.info("The target CSR matrix for RMCL has been created.")
         log.info(f"RMCL: RMCL will start soon.")
-        rmclresult = mclprocess(tmplacsr)
+        rmclresult = mclprocess(focusedlatentadj)
         log.info(f"rmcresult: {rmclresult}")
         if rmclresult==None:
             log.info(f"Warning: RMCL not possible.")
         else:
-            corecluscorespond = list(zip(coreclusterbutrepresentmember,coreclusbutrepresentrow))
-            mapping = {v: k for k, v in dict(corecluscorespond).items()}
             finalrmclresult = {k: [mapping[x] for x in v if x in mapping] for k, v in rmclresult.items()}
-            log.info(f"Final result of rmcl after renumbering--core reclustering: {finalrmclresult}")
+            log.info(f"Final result of rmcl after renumbering--{algorithm}: {finalrmclresult}")
 
-def rmcl_branching(*args, **kwargs):
-    return rmcl_basic(*args, **kwargs)
+def rmcl_basic(*args, **kwargs):
+    return rmcl_branching(*args, **kwargs)
