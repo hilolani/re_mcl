@@ -22,7 +22,7 @@ import io
 import json
 import pickle
 import sys
-from typing import Optional, Dict
+from typing import Any, Tuple, Dict, List, Optional
 
 #If you use a Google Colab user, run the following.
 #from google.colab import drive
@@ -393,3 +393,21 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
 
 def rmcl_basic(*args, **kwargs):
     return rmcl_branching(*args, **kwargs)
+
+def find_all_in_dict_lists(
+    d: Dict[Any, List[Any]], 
+    target: Any
+) -> List[Tuple[Any, List[Any]]]:
+    result = []
+    for key, lst in d.items():
+        if target in lst:
+            result.append((key, lst))
+    return result
+
+def clusinfo_from_nodes(clustering_result, node):
+  if type(clustering_result) == dict:
+    return find_all_in_dict_lists(clustering_result, node)
+  elif  type(clustering_result) == tuple or type(clustering_result) == list:
+    return find_all_in_dict_lists(dict(enumerate(clustering_result)),node)
+  else:
+    return []  
