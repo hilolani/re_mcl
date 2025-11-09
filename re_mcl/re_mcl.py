@@ -98,19 +98,11 @@ def load_adjmats(return_X_y=False, as_frame=False, scaled=False):
         DESCR="This is a toy dataset consisting of six sparse matrices in Matrix Market format."
     )
 
-def load_mif(return_X_y=False, as_frame=False, scaled=False):
-    base_path = os.path.join(os.path.dirname(__file__), "data")    
-    return Bunch(
-        erdosReny = os.path.join(base_path, "ErdosReny.mtx"),
-        gadget = os.path.join(base_path, "gadget.mtx"),
-        heterophilly = os.path.join(base_path, "heterophilly.mtx"),
-        homophilly = os.path.join(base_path, "homophilly.mtx"),
-        karateclub = os.path.join(base_path, "karateclub.mtx"),
-        scalefree = os.path.join(base_path, "scalefree.mtx"),
-        eat = os.path.join(base_path, "eat.mtx"),
-        DESCR="This is a toy dataset consisting of six sparse matrices in Matrix Market format."
-    )
+def load_mif(*args, **kwargs):
+    return load_adjmats(*args, **kwargs)
 
+def load_mcl(*args, **kwargs):
+    return load_adjmats(*args, **kwargs)
 
 class SafeCSR(csr_matrix):
     def __repr__(self):
