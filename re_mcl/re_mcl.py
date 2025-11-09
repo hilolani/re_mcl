@@ -319,11 +319,21 @@ def save_safe_csr_to_mtx(safecsrmatrix, path: str, logger=None):
     mmwrite(path, safecsrmatrix)
     log.info(f"Saved CSR matrix to {path}")
 
-def rmcl_branching(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=1.0, reverse = False, logger = None):
+def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse = False, logger = None):
     log = resolve_logger(logger, "mcl")
     print(f"log name: {log.name}")
-    originadj =  mtx_originadj
-    mmoriginadj = mmread(originadj)
+    if isinstance(originadj, str) and os.path.exists(originadj):
+        mmoriginadj = mmread(originadj)
+        log.info("The original adjacency information was given as an mtx file.")
+    elif isinstance(originadj, SafeCSR):
+        log.info("The original adjacency information was given as a SafeCSR object.")
+        pathtmp = os.getcwd() + "/" + "tmp.mtx"
+        save_safe_csr_to_mtx(originadj, pathtmp)
+        mmoriginadj = mmread(pathtmp)
+    else:
+        msg = f"Unsupported file or variable type: {originadj}"
+        log.error(msg)
+        raise ValueError(msg) 
     cluslist = dic_mclresult
     clusmemlist=[cluslist[i] for i in range(len(cluslist))]
     clussizelist = [len(j) for j in clusmemlist]
