@@ -379,6 +379,7 @@ def rmcl_branching(dic_mclresult, mtx_originadj, defaultcorenum=0, threspruning=
         else:
             finalrmclresult = {k: [mapping[x] for x in v if x in mapping] for k, v in rmclresult.items()}
             log.info(f"Final result of rmcl after renumbering--{algorithm}: {finalrmclresult}")
+            return finalrmclresult
 
 def rmcl_basic(*args, **kwargs):
     return rmcl_branching(*args, **kwargs)
