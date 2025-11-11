@@ -325,7 +325,7 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
     else:
         msg = f"Unsupported file or variable type: {originadj}"
         log.error(msg)
-        raise ValueError(msg) 
+        raise ValueError(msg)
     cluslist = dic_mclresult
     clusmemlist=[cluslist[i] for i in range(len(cluslist))]
     clussizelist = [len(j) for j in clusmemlist]
@@ -343,6 +343,7 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         max_indices = [np.argwhere(i == np.max(i)).flatten().tolist() for i in clusmemdeginfo]
         allrepresentnodeslist = [clusmemlist[i][max_indices[i][0]] for i in range(len(max_indices))]
         allbutcorerepresentnodeslist = [elem for i, elem in enumerate(allrepresentnodeslist) if i !=coreclusternumber]
+        print(f"allbutcorerepresentnodeslist: {allbutcorerepresentnodeslist}")
         coreclustermember = clusmemlist[coreclusternumber]
         coreclusterbutrepresentmember = [elem for i, elem in enumerate(coreclustermember) if elem != allrepresentnodeslist[coreclusternumber]]
         values = {(i, j): v for i, j, v in zip(mmoriginadj.row, mmoriginadj.col, mmoriginadj.data)}
@@ -351,23 +352,28 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         corresrow = list(zip(coreclusterbutrepresentmember,coreclusbutrepresentrow))
         correscol = list(zip(allbutcorerepresentnodeslist,allbutcoreclusrepresentcol))
         corecluscorespond = list(zip(coreclusterbutrepresentmember,coreclusbutrepresentrow))
-        mapping = {v: k for k, v in dict(corecluscorespond).items()}
+        coremapping = {v: k for k, v in dict(corecluscorespond).items()}
+
+        noncoreclusbutrepresentrow = list(range(len(allbutcorerepresentnodeslist)))
+        noncorecluscorespond = list(zip(allbutcorerepresentnodeslist,noncoreclusbutrepresentrow))
+        noncoremapping = {v: k for k, v in dict(noncorecluscorespond).items()}
+
         comblist = list(itertools.product(coreclusterbutrepresentmember,allbutcorerepresentnodeslist))
         results = [values.get(comblist, 0.0) for comblist in comblist]
         focusedcomblist = list(itertools.product(coreclusbutrepresentrow, allbutcoreclusrepresentcol))
         rows, cols = zip(*focusedcomblist)
         cols = tuple([x - allbutcoreclusrepresentcol[0] for x in cols])
-        focuesd_sparse_mat = coo_matrix((results, (rows, cols)), shape=(len(coreclusterbutrepresentmember),len(allbutcorerepresentnodeslist)))
-        log.info(f"focused_sparse_mat size is: {focuesd_sparse_mat.shape[0]}, {focuesd_sparse_mat.shape[1]}")
-        focuesd_sparse_mat_csr = focuesd_sparse_mat.tocsr()
+        focused_sparse_mat = coo_matrix((results, (rows, cols)), shape=(len(coreclusterbutrepresentmember),len(allbutcorerepresentnodeslist)))
+        log.info(f"focused_sparse_mat size is: {focused_sparse_mat.shape[0]}, {focused_sparse_mat.shape[1]}")
+        focused_sparse_mat_csr = focused_sparse_mat.tocsr()
         if reverse == False:
             log.info("reverse: False. We are running branching MCL.")
             algorithm = "branching mcl as core reclustering"
-            focusedlatentadj=focuesd_sparse_mat_csr @ focuesd_sparse_mat_csr.T
+            focusedlatentadj=focused_sparse_mat_csr @ focused_sparse_mat_csr.T
         elif reverse == True:
             log.info("reverse: True. We are running reverse branching MCL.")
             algorithm = "reverse branching mcl as non-core reclustering"
-            focusedlatentadj=focuesd_sparse_mat_csr.T @ focuesd_sparse_mat_csr
+            focusedlatentadj=focused_sparse_mat_csr.T @ focused_sparse_mat_csr
         print(f"The shape of the rmcl target csr matrix : {focusedlatentadj.shape}.")
         focusedlatentadj.data[focusedlatentadj.data < thresp] = 0.0
         focusedlatentadj.setdiag(0.0)
@@ -379,10 +385,18 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         if rmclresult==None:
             log.info(f"Warning: RMCL not possible.")
         else:
-            finalrmclresult = {k: [mapping[x] for x in v if x in mapping] for k, v in rmclresult.items()}
-            log.info(f"Final result of rmcl after renumbering--{algorithm}: {finalrmclresult}")
-            return finalrmclresult
-
+            if reverse == False:
+                finalrmclresult = {k: [coremapping[x] for x in v if x in coremapping] for k, v in rmclresult.items()}
+                finalrmclresulttotal = append_hub_to_recluscore(finalrmclresult,allrepresentnodeslist[coreclusternumber])
+                log.info(f"Final result of rmcl after renumbering--{algorithm}: {finalrmclresult}")
+                return finalrmclresult
+            elif reverse == True:
+                tmp_rmclresult = {k: [noncoremapping[x] for x in v if x in noncoremapping] for k, v in rmclresult.items()}
+                finalrmclresult = [[clusinfo_from_nodes(cluslist, j)[0] for j in sublist] for sublist in tmp_rmclresult.values()]
+                finalrmclresult_adjusted =  [[(i, set().union(*[vals for _, vals in tmp]))] for i, tmp in enumerate(finalrmclresult)]
+                log.info(f"Final result of rmcl after renumbering--{algorithm}: {finalrmclresult}, adjusted: {finalrmclresult_adjusted}")
+                return finalrmclresult,finalrmclresult_adjusted
+                
 def rmcl_basic(*args, **kwargs):
     return rmcl_branching(*args, **kwargs)
 
