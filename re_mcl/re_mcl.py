@@ -358,7 +358,7 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         rows, cols = zip(*focusedcomblist)
         cols = tuple([x - allbutcoreclusrepresentcol[0] for x in cols])
         focuesd_sparse_mat = coo_matrix((results, (rows, cols)), shape=(len(coreclusterbutrepresentmember),len(allbutcorerepresentnodeslist)))
-        log.info(f"focuesd_sparse_mat size is: {focuesd_sparse_mat.shape[0]}, {focuesd_sparse_mat.shape[1]}")
+        log.info(f"focused_sparse_mat size is: {focuesd_sparse_mat.shape[0]}, {focuesd_sparse_mat.shape[1]}")
         focuesd_sparse_mat_csr = focuesd_sparse_mat.tocsr()
         if reverse == False:
             log.info("reverse: False. We are running branching MCL.")
