@@ -403,3 +403,16 @@ def clusinfo_from_nodes(clustering_result, node):
     return find_all_in_dict_lists(dict(enumerate(clustering_result)),node)
   else:
     return []  
+
+def append_hub_to_recluscore(rmclresultcore,hubnumlist):
+    lenrmclresultcore = len(rmclresultcore)
+    if type(hubnumlist) == int:
+        tobeadded = [hubnumlist]
+        lentobeadded = 1
+    elif type(hubnumlist) == list:
+        tobeadded = hubnumlist
+        lentobeadded = len(tobeadded)    
+    for i in range(lentobeadded):
+        rmclresultcore[lenrmclresultcore + i] = [tobeadded[i]]
+        print(i)
+    return rmclresultcore
