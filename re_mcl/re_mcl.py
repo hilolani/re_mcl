@@ -347,7 +347,6 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         max_indices = [np.argwhere(i == np.max(i)).flatten().tolist() for i in clusmemdeginfo]
         allrepresentnodeslist = [clusmemlist[i][max_indices[i][0]] for i in range(len(max_indices))]
         allbutcorerepresentnodeslist = [elem for i, elem in enumerate(allrepresentnodeslist) if i !=coreclusternumber]
-        print(f"allbutcorerepresentnodeslist: {allbutcorerepresentnodeslist}")
         coreclustermember = clusmemlist[coreclusternumber]
         coreclusterbutrepresentmember = [elem for i, elem in enumerate(coreclustermember) if elem != allrepresentnodeslist[coreclusternumber]]
         values = {(i, j): v for i, j, v in zip(mmoriginadj.row, mmoriginadj.col, mmoriginadj.data)}
