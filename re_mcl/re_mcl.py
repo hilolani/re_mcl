@@ -334,9 +334,13 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         log.info(f"Warning: There is no core cluster, so no need to run rmcl.")
     else:
         thresp = threspruning
-        corecluscanddata = list(zip(corecluscandlist,[clussizelist[i] for i in corecluscandlist]))
+        corecluscanddata_tmp = list(zip(corecluscandlist,[clussizelist[i] for i in corecluscandlist]))
+        log.info(f"The candidate(s) of the core cluster are: {corecluscanddata_tmp}")
+        corecluscanddata = sorted(corecluscanddata_tmp, key=lambda x: x[1], reverse=True)
+        log.info(f"The sorted candidate(s) of the core cluster are: {corecluscanddata}")
         defaultcore = defaultcorenum
         coreclusternumber = corecluscanddata[defaultcore][0]
+        log.info(f"Due to specification constraints, only one core cluster candidate with the maximum number of members will be selected. The cluster number is as follows.: {coreclusternumber}")
         G = nx.from_scipy_sparse_array(mmoriginadj)
         deginfo = G.degree
         clusmemdeginfo = [[deginfo[i] for i in clusmemlist[j]] for j in range(len(clusmemlist))]
@@ -353,11 +357,9 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         correscol = list(zip(allbutcorerepresentnodeslist,allbutcoreclusrepresentcol))
         corecluscorespond = list(zip(coreclusterbutrepresentmember,coreclusbutrepresentrow))
         coremapping = {v: k for k, v in dict(corecluscorespond).items()}
-
         noncoreclusbutrepresentrow = list(range(len(allbutcorerepresentnodeslist)))
         noncorecluscorespond = list(zip(allbutcorerepresentnodeslist,noncoreclusbutrepresentrow))
         noncoremapping = {v: k for k, v in dict(noncorecluscorespond).items()}
-
         comblist = list(itertools.product(coreclusterbutrepresentmember,allbutcorerepresentnodeslist))
         results = [values.get(comblist, 0.0) for comblist in comblist]
         focusedcomblist = list(itertools.product(coreclusbutrepresentrow, allbutcoreclusrepresentcol))
