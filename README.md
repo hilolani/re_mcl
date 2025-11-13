@@ -1,41 +1,43 @@
 # re_mcl
 This is a Python program for Markov Clustering (MCL) that supports not only dense matrices (to be automatically converted to CSR format) but also sparse matrices (can read Matrix Market mtx files). The convergence process can also be reproduced using the logger protocol. Run
 
-pip install git+https://github.com/hilolani/re_mcl.git
+    pip install git+https://github.com/hilolani/re_mcl.git
 
-to use this program. 
+to use this program. (If you are using Google Colab, put "!" before "pip")
 
 Several adjacent matrices for demonstration purposes are stored in this repository as Matrix Market mtx files and can be used for calculations such as MCL as follows.
 
-from re_mcl import *
+    from re_mcl import *
 
-re_mcl= load_adjmats()
+    re_mcl= load_adjmats()
 
-mtxlist = [re_mcl.gadget,re_mcl.karateclub,re_mcl.erdosReny,re_mcl.scalefree,re_mcl.homophilly,re_mcl.heterophilly,re_mcl.eat]
+    mtxlist = [re_mcl.gadget,re_mcl.karateclub,re_mcl.erdosReny,re_mcl.scalefree,re_mcl.homophilly,re_mcl.heterophilly,re_mcl.eat]
 
-adjacencyinfocheckedlist = [adjacencyinfocheck(i) for i in mtxlist]
+    adjacencyinfocheckedlist = [adjacencyinfocheck(i) for i in mtxlist]
 
-adjacencylist = ['gadget', 'karateclub', 'erdosReny', 'scalefree', 'homophilly', 'heterophilly']
+    adjacencylist = ['gadget', 'karateclub', 'erdosReny', 'scalefree', 'homophilly', 'heterophilly']
 
-mclprocess(re_mcl.karateclub)
+    mclprocess(re_mcl.karateclub)
 
 In addition to the conventional MCL, Recurrent MCL (RMCL), developed at the former Akama Laboratory at Tokyo Institute of Technology, has been implemented in this repository and can be computed as follows with the new function of rmcl_basic().
 
-cluslist = mclprocess(re_mcl.scalefree, 20)
+    cluslist = mclprocess(re_mcl.scalefree, 20)
 
-result_branching = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],threspruning=1,reverse=False) #The core cluster is divided based on the algorithm of of Branching RMCL.
+    result_branching = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],threspruning=1,reverse=False) #The core cluster is divided based on the algorithm of of Branching RMCL.
 
 """
 
 Also good if you are using Google Colab.
 
-originalpath = "/content/drive/My Drive/Colab Notebooks/scalefree.mtx"
+    originalpath = "/content/drive/My Drive/Colab Notebooks/scalefree.mtx"
 
-result_branching = rmcl_basic(cluslist,originalpath,threspruning=2,reverse=False)
+    result_branching = rmcl_basic(cluslist,originalpath,threspruning=2,reverse=False)
 
 """
 
-result_reverse_branching = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],threspruning=3,reverse=True)#The clusters other than the core one is size-adjusted (appropriately merged) based on the algorithm of Reverse granching RMCL.
+    result_reverse_branching = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],threspruning=3,reverse=True)
+    
+    #The clusters other than the core one is size-adjusted (appropriately merged) based on the algorithm of Reverse granching RMCL.
 
 # Notes:
 The following is the basic algorithm of MCL and Branching MCL (based on the latent adjacency between the core cluster and the others.) The reverse Branching MCL consists of appropriately consolidating other fragmented clusters by swapping the order of the matrices to compute the product for PathNumbersMatrix such as n = Tr(CC’ n_RCS’k) * CC’ n_RCS’k.
