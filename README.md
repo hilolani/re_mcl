@@ -45,23 +45,25 @@ The following is the basic algorithm of MCL and Branching MCL (based on the late
 #The following follows but modifies a little Figure15 that is proposed in Van Dongen’s thesis, p.55.
 
 MCL (G,e,r) {
+    
     G=G+I; T1=TG;
+    
     for k=1,...,∞{
         T2k=Expe(T2k-1); # Expansion T2k+1=Γr(T2k);	# Inflation
     }
     
-#Starting cluster stage. 
+    #Starting cluster stage. 
 
     for i=1,...,n {
        T2k+1 = = [tij](i=1,2,…,m; j=1,2,…,m);
        Ci={[tij]| for j=1,...,m{[tij]>0.1};};
     }
     
-#Ending cluster stage.
+    #Ending cluster stage.
 
-ClusterStagek={Ck(1), Ck(2), ..., Ck(d)}; 
+    ClusterStagek={Ck(1), Ck(2), ..., Ck(d)}; 
 
-If(T2k+1 is (near-) idempotent) break;
+    If(T2k+1 is (near-) idempotent) break;
 
 }
 
