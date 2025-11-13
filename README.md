@@ -49,7 +49,8 @@ MCL (G,e,r) {
     G=G+I; T1=TG;
     
     for k=1,...,∞{
-        T2k=Expe(T2k-1); # Expansion T2k+1=Γr(T2k);	# Inflation
+        T2k=Expe(T2k-1); # Expansion 
+        T2k+1=Γr(T2k);	# Inflation
     }
     
     #Starting cluster stage. 
