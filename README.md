@@ -43,29 +43,32 @@ The following is the basic algorithm of MCL and Branching MCL (based on the late
 # means Comment Out.
 #The MCL algorithm follows but modifies a little Figure15 that is proposed in Van Dongen’s thesis, p.55.
 MCL (G,e,r) {
-
-G=G+I; T1=TG;
-for k=1,...,∞{
-
-T2k=Expe(T2k-1); # Expansion T2k+1=Γr(T2k);	# Inflation
-
-# Starting cluster stage. for i=1,...,n {
-T2k+1 = = [tij](i=1,2,…,m; j=1,2,…,m);
-Ci={[tij]| for j=1,...,m{[tij]>0.1};};
-}
-
+    G=G+I; T1=TG;
+    for k=1,...,∞{
+        T2k=Expe(T2k-1); # Expansion T2k+1=Γr(T2k);	# Inflation
+    }
+# Starting cluster stage. 
+    for i=1,...,n {
+       T2k+1 = = [tij](i=1,2,…,m; j=1,2,…,m);
+       Ci={[tij]| for j=1,...,m{[tij]>0.1};};
+    }
 # Ending cluster stage.
-ClusterStagek={Ck(1), Ck(2), ..., Ck(d)}; If(T2k+1 is (near-) idempotent) break;
+ClusterStagek={Ck(1), Ck(2), ..., Ck(d)}; 
+If(T2k+1 is (near-) idempotent) break;
 }
 
 # Below is the BMCL algorithm to divide large-sized core clusters made by the original MCL.
 # Selecting Core Clusters,
+
 if(Size(Ck(p)) > 2*Standard Deviation(Size Ck(j)), then CoreCluster n = Ck(p);
 
 # Selecting the representative node for each cluster Ck . Representaive_ClusterStagek = {Max (Degree (Ck(j) ) ) | j=1,2,….,d};
 
 # Removing the representative node of the core cluster from the following two lists which are the arguments of the function Complement,
-CC’ n= Complement(CoreCluster n, Representaive_ClusterStagek) RCS’k= Complement(Representaive_ClusterStagek, CoreCluster n)
+
+CC’ n= Complement(CoreCluster n, Representaive_ClusterStagek) 
+
+RCS’k= Complement(Representaive_ClusterStagek, CoreCluster n)
 
 # The Function ExtractAdjacency(adjacency_matrix, {row_number,column_number})is to extract rows and columns of an adjacency matrix,
 CC’ n_RCS’k =ExtractAdjacency(G, {CC’ n, RCS’k })
