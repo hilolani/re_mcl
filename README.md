@@ -40,9 +40,9 @@ result_reverse_branching = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],thres
 # Notes:
 The following is the basic algorithm of MCL and Branching MCL (based on the latent adjacency between the core cluster and the others.) The reverse Branching MCL consists of appropriately consolidating other fragmented clusters by swapping the order of the matrices to compute the product for PathNumbersMatrix such as n = Tr(CC’ n_RCS’k) * CC’ n_RCS’k.
 
-# means Comment Out.
+# The MCL algorithm 
 
-#The MCL algorithm follows but modifies a little Figure15 that is proposed in Van Dongen’s thesis, p.55.
+#The following follows but modifies a little Figure15 that is proposed in Van Dongen’s thesis, p.55.
 
 MCL (G,e,r) {
     G=G+I; T1=TG;
@@ -50,14 +50,14 @@ MCL (G,e,r) {
         T2k=Expe(T2k-1); # Expansion T2k+1=Γr(T2k);	# Inflation
     }
     
-# Starting cluster stage. 
+#Starting cluster stage. 
 
     for i=1,...,n {
        T2k+1 = = [tij](i=1,2,…,m; j=1,2,…,m);
        Ci={[tij]| for j=1,...,m{[tij]>0.1};};
     }
     
-# Ending cluster stage.
+#Ending cluster stage.
 
 ClusterStagek={Ck(1), Ck(2), ..., Ck(d)}; 
 
@@ -65,25 +65,32 @@ If(T2k+1 is (near-) idempotent) break;
 
 }
 
-# Below is the BMCL algorithm to divide large-sized core clusters made by the original MCL.
-# Selecting Core Clusters,
+# The RMCL algorithms
+
+#Below is the BMCL algorithm to divide large-sized core clusters made by the original MCL.
+
+#Selecting Core Clusters,
 
 if(Size(Ck(p)) > 2*Standard Deviation(Size Ck(j)), then CoreCluster n = Ck(p);
 
-# Selecting the representative node for each cluster Ck . Representaive_ClusterStagek = {Max (Degree (Ck(j) ) ) | j=1,2,….,d};
+#Selecting the representative node for each cluster Ck . Representaive_ClusterStagek = {Max (Degree (Ck(j) ) ) | j=1,2,….,d};
 
-# Removing the representative node of the core cluster from the following two lists which are the arguments of the function Complement,
+#Removing the representative node of the core cluster from the following two lists which are the arguments of the function Complement,
 
 CC’ n= Complement(CoreCluster n, Representaive_ClusterStagek) 
 
 RCS’k= Complement(Representaive_ClusterStagek, CoreCluster n)
 
-# The Function ExtractAdjacency(adjacency_matrix, {row_number,column_number})is to extract rows and columns of an adjacency matrix,
+#The Function ExtractAdjacency(adjacency_matrix, {row_number,column_number})is to extract rows and columns of an adjacency matrix,
+
 CC’ n_RCS’k =ExtractAdjacency(G, {CC’ n, RCS’k })
 
-# Tr means transposition of a matrix. PathNumbersMatrix n =CC’ n_RCS’k * Tr(CC’ n_RCS’k);
+#Tr means transposition of a matrix. 
 
-# Generating an adjacency matrix by setting all diagonal elements=0 and all non diagonal elements larger than 1 = 1.
+PathNumbersMatrix n =CC’ n_RCS’k * Tr(CC’ n_RCS’k);
+
+#Generating an adjacency matrix by setting all diagonal elements=0 and all non diagonal elements larger than 1 = 1.
+
 LatentAdjacencyMatrix n =MakeAdjacencyMatrix(PathNumbersMatrix n);
 
 #Repeat MCL, MCL(LatentAdjacencyMatrix n);
