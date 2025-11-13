@@ -19,7 +19,7 @@ Several adjacent matrices for demonstration purposes are stored in this reposito
 
     mclprocess(re_mcl.karateclub)
 
-In addition to the conventional MCL, Recurrent MCL (RMCL), developed at the former Akama Laboratory at Tokyo Institute of Technology, has been implemented in this repository and can be computed as follows with the new function of rmcl_basic().
+In addition to the conventional MCL, Recurrent MCL (RMCL), developed at the former Akama Laboratory at Tokyo Institute of Technology, has been implemented in this repository and can be computed as follows with the new function of rmcl_basic(). BMCL (Branching Markov Clustering) as a part of RMCL (recurrent MCL) algorithm allows us to overcome a weak point--clusters size unbalance--of the ordinary MCL revealed particularly specifically when it is applied to a document or a corpus. BMCL makes it possible to subdivide a large core cluster into appropriately resized sub-graphs. It consists of creating a virtual adjacency relationship among the Markov hard clusters and producing intrinsically informative complex networks.
 
     cluslist = mclprocess(re_mcl.scalefree, 20)
 
