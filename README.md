@@ -97,7 +97,9 @@ MCL (G,e,r) {
 
     LatentAdjacencyMatrix n =MakeAdjacencyMatrix(PathNumbersMatrix n);
 
-#Repeat MCL, MCL(LatentAdjacencyMatrix n);
+#Repeat MCL.
+
+    MCL(LatentAdjacencyMatrix n);
 
 
 # References
