@@ -73,32 +73,34 @@ MCL (G,e,r) {
 
 #Selecting Core Clusters,
 
-if(Size(Ck(p)) > 2*Standard Deviation(Size Ck(j)), then CoreCluster n = Ck(p);
+    if(Size(Ck(p)) > 2*Standard Deviation(Size Ck(j)), then CoreCluster n = Ck(p);
 
-#Selecting the representative node for each cluster Ck . Representaive_ClusterStagek = {Max (Degree (Ck(j) ) ) | j=1,2,….,d};
+#Selecting the representative node for each cluster Ck . 
+
+    Representaive_ClusterStagek = {Max (Degree (Ck(j) ) ) | j=1,2,….,d};
 
 #Removing the representative node of the core cluster from the following two lists which are the arguments of the function Complement,
 
-CC’ n= Complement(CoreCluster n, Representaive_ClusterStagek) 
+    CC’ n= Complement(CoreCluster n, Representaive_ClusterStagek) 
 
-RCS’k= Complement(Representaive_ClusterStagek, CoreCluster n)
+    RCS’k= Complement(Representaive_ClusterStagek, CoreCluster n)
 
 #The Function ExtractAdjacency(adjacency_matrix, {row_number,column_number})is to extract rows and columns of an adjacency matrix,
 
-CC’ n_RCS’k =ExtractAdjacency(G, {CC’ n, RCS’k })
+    CC’ n_RCS’k =ExtractAdjacency(G, {CC’ n, RCS’k })
 
 #Tr means transposition of a matrix. 
 
-PathNumbersMatrix n =CC’ n_RCS’k * Tr(CC’ n_RCS’k);
+    PathNumbersMatrix n =CC’ n_RCS’k * Tr(CC’ n_RCS’k);
 
 #Generating an adjacency matrix by setting all diagonal elements=0 and all non diagonal elements larger than 1 = 1.
 
-LatentAdjacencyMatrix n =MakeAdjacencyMatrix(PathNumbersMatrix n);
+    LatentAdjacencyMatrix n =MakeAdjacencyMatrix(PathNumbersMatrix n);
 
 #Repeat MCL, MCL(LatentAdjacencyMatrix n);
 
 
-References
+# References
 
 Stijn van Dongen, Graph Clustering by Flow Simulation, 2000
 https://dspace.library.uu.nl/bitstream/handle/1874/848/full.pdf?sequence=1&isAllowed=y
