@@ -13,13 +13,70 @@ re_mcl= load_adjmats()
 
 mtxlist = [re_mcl.gadget,re_mcl.karateclub,re_mcl.erdosReny,re_mcl.scalefree,re_mcl.homophilly,re_mcl.heterophilly,re_mcl.eat]
 
+adjacencyinfocheckedlist = [adjacencyinfocheck(i) for i in mtxlist]
+
+adjacencylist = ['gadget', 'karateclub', 'erdosReny', 'scalefree', 'homophilly', 'heterophilly']
+
 mclprocess(re_mcl.karateclub)
 
 In addition to the conventional MCL, Recurrent MCL (RMCL), developed at the former Akama Laboratory at Tokyo Institute of Technology, has been implemented in this repository and can be computed as follows with the new function of rmcl_basic().
 
 cluslist = mclprocess(re_mcl.scalefree, 20)
 
-rmcl_basic(cluslist,re_mcl.scalefree)#The core cluster is divided based on the algorithm of RMCL.
+result_branching = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],threspruning=1,reverse=False) #The core cluster is divided based on the algorithm of of Branching RMCL.
+
+"""
+
+Also good if you are using Google Colab.
+
+originalpath = "/content/drive/My Drive/Colab Notebooks/scalefree.mtx"
+
+result_branching = rmcl_basic(cluslist,originalpath,threspruning=2,reverse=False)
+
+"""
+
+result_reverse_branching = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],threspruning=3,reverse=True)#The clusters other than the core one is size-adjusted (appropriately merged) based on the algorithm of Reverse granching RMCL.
+
+# Notes:
+The following is the basic algorithm of MCL and Branching MCL (based on the latent adjacency between the core cluster and the others.) The reverse Branching MCL consists of appropriately consolidating other fragmented clusters by swapping the order of the matrices to compute the product for PathNumbersMatrix such as n = Tr(CC’ n_RCS’k) * CC’ n_RCS’k.
+
+# means Comment Out.
+#The MCL algorithm follows but modifies a little Figure15 that is proposed in Van Dongen’s thesis, p.55.
+MCL (G,e,r) {
+
+G=G+I; T1=TG;
+for k=1,...,∞{
+
+T2k=Expe(T2k-1); # Expansion T2k+1=Γr(T2k);	# Inflation
+
+# Starting cluster stage. for i=1,...,n {
+T2k+1 = = [tij](i=1,2,…,m; j=1,2,…,m);
+Ci={[tij]| for j=1,...,m{[tij]>0.1};};
+}
+
+# Ending cluster stage.
+ClusterStagek={Ck(1), Ck(2), ..., Ck(d)}; If(T2k+1 is (near-) idempotent) break;
+}
+
+# Below is the BMCL algorithm to divide large-sized core clusters made by the original MCL.
+# Selecting Core Clusters,
+if(Size(Ck(p)) > 2*Standard Deviation(Size Ck(j)), then CoreCluster n = Ck(p);
+
+# Selecting the representative node for each cluster Ck . Representaive_ClusterStagek = {Max (Degree (Ck(j) ) ) | j=1,2,….,d};
+
+# Removing the representative node of the core cluster from the following two lists which are the arguments of the function Complement,
+CC’ n= Complement(CoreCluster n, Representaive_ClusterStagek) RCS’k= Complement(Representaive_ClusterStagek, CoreCluster n)
+
+# The Function ExtractAdjacency(adjacency_matrix, {row_number,column_number})is to extract rows and columns of an adjacency matrix,
+CC’ n_RCS’k =ExtractAdjacency(G, {CC’ n, RCS’k })
+
+# Tr means transposition of a matrix. PathNumbersMatrix n =CC’ n_RCS’k * Tr(CC’ n_RCS’k);
+
+# Generating an adjacency matrix by setting all diagonal elements=0 and all non diagonal elements larger than 1 = 1.
+LatentAdjacencyMatrix n =MakeAdjacencyMatrix(PathNumbersMatrix n);
+
+#Repeat MCL, MCL(LatentAdjacencyMatrix n);
+
 
 References
 
