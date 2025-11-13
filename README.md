@@ -44,8 +44,7 @@ The following is the basic algorithm of MCL and Branching MCL (based on the late
 
 #The following follows but modifies a little Figure15 that is proposed in Van Dongen’s thesis, p.55.
 
-MCL (G,e,r) {
-    
+MCL (G,e,r) {  
     G=G+I; T1=TG;
     
     for k=1,...,∞{
@@ -65,7 +64,6 @@ MCL (G,e,r) {
     ClusterStagek={Ck(1), Ck(2), ..., Ck(d)}; 
 
     If(T2k+1 is (near-) idempotent) break;
-
 }
 
 # The RMCL algorithms
