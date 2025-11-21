@@ -5,7 +5,7 @@ This is a Python program for Markov Clustering (MCL) that supports not only dens
 
 to use this program. (If you are using Google Colab, put "!" before "pip")
 
-Several adjacent matrices for demonstration purposes are stored in this repository as Matrix Market mtx files and can be used for calculations such as MCL as follows.
+Several adjacent matrices for demonstration purposes are stored in this repository as Matrix Market mtx files and can be used for calculations such as MCL as follows. The usage of these basic datasets overlaps with the readme in the MiF repository, so it will be omitted here. Please refer to that document for details.
 
     from re_mcl import *
 
