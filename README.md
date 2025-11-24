@@ -116,4 +116,7 @@ Hiroyuki Akama et al, 2008. Random graph model simulations of semantic networks 
 Hiroyuki Akama et al., 2008. How to Take Advantage of the Limitations with Markov Clustering?--The Foundations of Branching Markov Clustering (BMCL), IJCNLP-2008, p.901~906
 https://aclanthology.org/I08-2129.pdf
 
+Hiroyuki Akama et al., 2007. Building a clustered semantic network for an Entire Large Dictionary of Japanese, PACLING-2007, p.308~316
+https://www.researchgate.net/publication/228950233_Building_a_clustered_semantic_network_for_an_Entire_Large_Dictionary_of_Japanese
+
 Jaeyoung Jung, Maki Miyake, Hiroyuki Akama. 2006. Recurrent Markov Cluster (RMCL) Algorithm for the Refinement of the Semantic Network. In: LREC. p. 1428–1431 http://www.lrec-conf.org/proceedings/lrec2006/
