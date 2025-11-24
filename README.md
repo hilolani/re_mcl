@@ -113,4 +113,7 @@ Jaeyoung Jung and Hiroyuki Akama. 2008. Employing Latent Adjacency for Appropria
 
 Hiroyuki Akama et al, 2008. Random graph model simulations of semantic networks for associative Concept dictionaries, TextGraphs-3 doi: https://dl.acm.org/doi/10.5555/1627328.1627337
 
+Hiroyuki Akama et al., 2008. How to Take Advantage of the Limitations with Markov Clustering?--The Foundations of Branching Markov Clustering (BMCL), IJCNLP-2008, p.901~906
+https://aclanthology.org/I08-2129.pdf
+
 Jaeyoung Jung, Maki Miyake, Hiroyuki Akama. 2006. Recurrent Markov Cluster (RMCL) Algorithm for the Refinement of the Semantic Network. In: LREC. p. 1428–1431 http://www.lrec-conf.org/proceedings/lrec2006/
