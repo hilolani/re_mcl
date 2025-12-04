@@ -295,8 +295,8 @@ def mclprocess(adjacencymatrixchecked, stepnum = 20, logger = None):
         if convergence == False:
             rwmat = inflation(expansion(rwmat))
         else:
-            print(f"Convergence: {convergence}")
-            print(f"Cluster list: {clustersatthisstep}")
+            log.info(f"Convergence: {convergence}")
+            log.info(f"Cluster list: {clustersatthisstep}")
             return clustersatthisstep
             break
         steps = steps + 1
@@ -378,7 +378,7 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
             log.info("reverse_process: True. We are running reverse branching MCL.")
             algorithm = "reverse branching mcl as non-core reclustering"
             focusedlatentadj=focused_sparse_mat_csr.T @ focused_sparse_mat_csr
-        print(f"The shape of the rmcl target csr matrix : {focusedlatentadj.shape}.")
+        log.info(f"The shape of the rmcl target csr matrix : {focusedlatentadj.shape}.")
         focusedlatentadj.data[focusedlatentadj.data < threspruning] = 0.0
         focusedlatentadj.setdiag(0.0)
         focusedlatentadj.eliminate_zeros()
