@@ -326,8 +326,7 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         msg = f"Unsupported file or variable type: {originadj}"
         log.error(msg)
         raise ValueError(msg)
-    cluslist = dic_mclresult
-    clusmemlist=[cluslist[i] for i in range(len(cluslist))]
+    clusmemlist=[dic_mclresult[i] for i in range(len(dic_mclresult))]
     clussizelist = [len(j) for j in clusmemlist]
     corecluscandlist = np.where(np.array(clussizelist)>np.mean(clussizelist) + 2*np.std(clussizelist).tolist())[0].tolist()
     if corecluscandlist==[]:
