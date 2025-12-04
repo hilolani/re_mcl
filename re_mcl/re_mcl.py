@@ -311,7 +311,7 @@ def save_safe_csr_to_mtx(safecsrmatrix, path: str, logger=None):
     mmwrite(path, safecsrmatrix)
     log.info(f"Saved CSR matrix to {path}")
 
-def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse = False, logger = None):
+def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse_process = False, logger = None):
     log = resolve_logger(logger, "mcl")
     print(f"log name: {log.name}")
     if isinstance(originadj, str) and os.path.exists(originadj):
@@ -338,8 +338,7 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         log.info(f"The candidate(s) of the core cluster are: {corecluscanddata_tmp}")
         corecluscanddata = sorted(corecluscanddata_tmp, key=lambda x: x[1], reverse=True)
         log.info(f"The sorted candidate(s) of the core cluster are: {corecluscanddata}")
-        defaultcore = defaultcorenum
-        coreclusternumber = corecluscanddata[defaultcore][0]
+        coreclusternumber = corecluscanddata[defaultcorenum][0]
         log.info(f"Due to specification constraints, only one core cluster candidate with the maximum number of members will be selected. The cluster number is as follows.: {coreclusternumber}")
         G = nx.from_scipy_sparse_array(mmoriginadj)
         deginfo = G.degree
@@ -367,12 +366,12 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         focused_sparse_mat = coo_matrix((results, (rows, cols)), shape=(len(coreclusterbutrepresentmember),len(allbutcorerepresentnodeslist)))
         log.info(f"focused_sparse_mat size is: {focused_sparse_mat.shape[0]}, {focused_sparse_mat.shape[1]}")
         focused_sparse_mat_csr = focused_sparse_mat.tocsr()
-        if reverse == False:
+        if reverse_process == False:
             log.info("reverse: False. We are running branching MCL.")
             algorithm = "branching mcl as core reclustering"
             focusedlatentadj=focused_sparse_mat_csr @ focused_sparse_mat_csr.T
-        elif reverse == True:
-            log.info("reverse: True. We are running reverse branching MCL.")
+        elif reverse_process == True:
+            log.info("reverse_process: True. We are running reverse branching MCL.")
             algorithm = "reverse branching mcl as non-core reclustering"
             focusedlatentadj=focused_sparse_mat_csr.T @ focused_sparse_mat_csr
         print(f"The shape of the rmcl target csr matrix : {focusedlatentadj.shape}.")
@@ -386,13 +385,13 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         if rmclresult==None:
             log.info(f"Warning: RMCL not possible.")
         else:
-            if reverse == False:
+            if reverse_process == False:
                 finalrmclresult = {k: [coremapping[x] for x in v if x in coremapping] for k, v in rmclresult.items()}
                 finalresulttmp = finalrmclresult.copy()
                 finalrmclresult_adjusted_total = append_hub_to_recluscore(finalresulttmp,allrepresentnodeslist[coreclusternumber])
                 log.info(f"Final result of rmcl after renumbering--{algorithm}:branching-rmcl result without hub in the core cluster: {finalrmclresult}, branching-rmcl result with the hub behind the queue: {finalrmclresult_adjusted_total}")
                 return finalrmclresult_adjusted_total
-            elif reverse == True:
+            elif reverse_process == True:
                 tmp_rmclresult = {k: [noncoremapping[x] for x in v if x in noncoremapping] for k, v in rmclresult.items()}
                 finalrmclresult = [[clusinfo_from_nodes(cluslist, j)[0] for j in sublist] for sublist in tmp_rmclresult.values()]
                 finalrmclresult_adjusted_total_tmp =  [[(i, set().union(*[vals for _, vals in tmp]))] for i, tmp in enumerate(finalrmclresult)]
