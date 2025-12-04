@@ -31,11 +31,11 @@ Also good if you are using Google Colab.
 
     originalpath = "/content/drive/My Drive/Colab Notebooks/scalefree.mtx"
 
-    result_branching = rmcl_basic(cluslist,originalpath,threspruning=2,reverse=False)
+    result_branching = rmcl_basic(cluslist,originalpath,threspruning=2,reverse_process=False)
 
 """
 
-    result_reverse_branching = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],threspruning=3,reverse=True)
+    result_reverse_branching = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],threspruning=3,reverse_process=True)
     
     #The clusters other than the core one is size-adjusted (appropriately merged) based on the algorithm of Reverse granching RMCL.
 
