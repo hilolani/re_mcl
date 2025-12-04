@@ -331,7 +331,9 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
     clussizelist = [len(j) for j in clusmemlist]
     corecluscandlist = np.where(np.array(clussizelist)>np.mean(clussizelist) + 2*np.std(clussizelist).tolist())[0].tolist()
     if corecluscandlist==[]:
-        log.info(f"Warning: There is no core cluster, so no need to run rmcl.")
+        msg = f"Warning: There is no core cluster, so no need to run rmcl."
+        log.error(msg)
+        raise TypeError(msg)   
     else:
         corecluscanddata_tmp = list(zip(corecluscandlist,[clussizelist[i] for i in corecluscandlist]))
         log.info(f"The candidate(s) of the core cluster are: {corecluscanddata_tmp}")
