@@ -367,7 +367,7 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         log.info(f"focused_sparse_mat size is: {focused_sparse_mat.shape[0]}, {focused_sparse_mat.shape[1]}")
         focused_sparse_mat_csr = focused_sparse_mat.tocsr()
         if reverse_process == False:
-            log.info("reverse: False. We are running branching MCL.")
+            log.info("reverse_process: False. We are running branching MCL.")
             algorithm = "branching mcl as core reclustering"
             focusedlatentadj=focused_sparse_mat_csr @ focused_sparse_mat_csr.T
         elif reverse_process == True:
