@@ -280,7 +280,7 @@ def get_soft_clusters_proto(adjacencymatrixchecked, threshold=1e-6, eps=1e-12, l
     clustersatthisstep = {k: np.where(flags[k, :] > 0.5)[0].tolist()
                           for k in range(flags.shape[0])}
     log.info(f"Convergence: {convergence}")
-    log.info(f"Cluster Matrix: {clusinfo}")
+    #log.info(f"Cluster Matrix: {clusinfo}")
     log.info(f"Cluster list: {clustersatthisstep}")
     return convergence,clusinfo, clustersatthisstep
 
