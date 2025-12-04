@@ -42,7 +42,7 @@ Also good if you are using Google Colab.
 # rmcl_branching
 This function's specification is as follows.
 
-rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse_process = False, logger = None):
+    rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse_process = False, logger = None):
 
 The first argument, `dic_mclresult`, directly assigns the return value of the `mcl_process()` function.
 
