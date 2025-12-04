@@ -39,6 +39,22 @@ Also good if you are using Google Colab.
     
     #The clusters other than the core one is size-adjusted (appropriately merged) based on the algorithm of Reverse granching RMCL.
 
+# rmcl_branching
+This function's specification is as follows.
+
+rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse_process = False, logger = None):
+
+The first argument, `dic_mclresult`, directly assigns the return value of the `mcl_process()` function.
+
+The second argument, `originadj`, contains the original adjacency matrix provided initially, but it must have been converted to a CSR sparse matrix via `adjacencyinfocheck()`.
+
+The third argument, `defaultcorenum`, and its default value 0 correspond to the number of the selected core cluster within the list of core clusters. A core cluster refers to any cluster whose size exceeds twice the standard deviation of all clusters output by MCL. In other words, if no core cluster exists, the `rmcl_branching()` function terminates with the message “There is no core cluster, so no need to run rmcl.” Typically, there is only one core cluster, numbered 0. However, if there are two or more core cluster candidates, they must be selected from the sorted list of candidates by size, with the second candidate being 1, the third being 2, and so on. This function is designed not to allow the selection and execution of multiple core clusters at once. 
+
+The fourth argument, threspruning, refers to the threshold for latent adjacency weights. Latent adjacency refers to the connection between two representative nodes (the nodes with the highest degree within their respective clusters) that are not directly adjacent, achieved via a two-step path through an intermediate cluster. 
+
+The fifth argument, `reverse_process`, has a default value of `False`. If `False`, it performs standard branching MCL for core cluster partitioning. If `True`, it instead performs reverse branching MCL, which appropriately re-merges clusters other than the core clusters.
+
+
 # Notes:
 The following is the basic algorithm of MCL and Branching MCL (based on the latent adjacency between the core cluster and the others.) The reverse Branching MCL consists of appropriately consolidating other fragmented clusters by swapping the order of the matrices to compute the product for PathNumbersMatrix such as n = Tr(CC’ n_RCS’k) * CC’ n_RCS’k.
 
