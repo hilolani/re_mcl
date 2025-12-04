@@ -23,7 +23,7 @@ In addition to the conventional MCL, Recurrent MCL (RMCL), developed at the form
 
     cluslist = mclprocess(re_mcl.scalefree, 20)
 
-    result_branching = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],threspruning=1,reverse=False) #The core cluster is divided based on the algorithm of of Branching RMCL.
+    result_branching = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],threspruning=1,reverse_process=False) #The core cluster is divided based on the algorithm of of Branching RMCL.
 
 """
 
