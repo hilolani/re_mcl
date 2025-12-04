@@ -333,13 +333,18 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
     if corecluscandlist==[]:
         log.info(f"Warning: There is no core cluster, so no need to run rmcl.")
     else:
-        thresp = threspruning
         corecluscanddata_tmp = list(zip(corecluscandlist,[clussizelist[i] for i in corecluscandlist]))
         log.info(f"The candidate(s) of the core cluster are: {corecluscanddata_tmp}")
         corecluscanddata = sorted(corecluscanddata_tmp, key=lambda x: x[1], reverse=True)
         log.info(f"The sorted candidate(s) of the core cluster are: {corecluscanddata}")
-        coreclusternumber = corecluscanddata[defaultcorenum][0]
-        log.info(f"Due to specification constraints, only one core cluster candidate with the maximum number of members will be selected. The cluster number is as follows.: {coreclusternumber}")
+        if len(corecluscanddata) >= defaultcorenum + 1:
+            coreclusternumber = corecluscanddata[defaultcorenum][0]
+        else:
+            msg = f"The number (other than 0) that the user assigned to the corecluster selected from the candidates, i.e. {defaultcorenum}, exceeds the extent of the possible corecluster set {len(corecluscanddata)}."
+            log.error(msg)
+            raise TypeError(msg)
+            break    
+        log.info(f"Due to specification constraints, only one core cluster candidate (with the maximum number of members, if the default setting 0 was kept) is selected. The cluster number is as follows.: {coreclusternumber}")
         G = nx.from_scipy_sparse_array(mmoriginadj)
         deginfo = G.degree
         clusmemdeginfo = [[deginfo[i] for i in clusmemlist[j]] for j in range(len(clusmemlist))]
@@ -375,7 +380,7 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
             algorithm = "reverse branching mcl as non-core reclustering"
             focusedlatentadj=focused_sparse_mat_csr.T @ focused_sparse_mat_csr
         print(f"The shape of the rmcl target csr matrix : {focusedlatentadj.shape}.")
-        focusedlatentadj.data[focusedlatentadj.data < thresp] = 0.0
+        focusedlatentadj.data[focusedlatentadj.data < threspruning] = 0.0
         focusedlatentadj.setdiag(0.0)
         focusedlatentadj.eliminate_zeros()
         log.info("The target CSR matrix for RMCL has been created.")
