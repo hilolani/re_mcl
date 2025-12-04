@@ -342,8 +342,7 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
         else:
             msg = f"The number (other than 0) that the user assigned to the corecluster selected from the candidates, i.e. {defaultcorenum}, exceeds the extent of the possible corecluster set {len(corecluscanddata)}."
             log.error(msg)
-            raise TypeError(msg)
-            break    
+            raise TypeError(msg)   
         log.info(f"Due to specification constraints, only one core cluster candidate (with the maximum number of members, if the default setting 0 was kept) is selected. The cluster number is as follows.: {coreclusternumber}")
         G = nx.from_scipy_sparse_array(mmoriginadj)
         deginfo = G.degree
