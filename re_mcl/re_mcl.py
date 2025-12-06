@@ -471,88 +471,37 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
 def sr_mcl(dic_mclresult, originadj, defaultcorenum=0, coreinfoonly = True, logger = None):
     log = resolve_logger(logger, "mcl")
     print(f"log name: {log.name}")
-    if isinstance(originadj, str) and os.path.exists(originadj):
-        mmoriginadj = mmread(originadj)
-        log.info("The original adjacency information was given as an mtx file.")
-    elif isinstance(originadj, SafeCSR):
-        log.info("The original adjacency information was given as a SafeCSR object.")
-        pathtmp = os.getcwd() + "/" + "tmp.mtx"
-        save_safe_csr_to_mtx(originadj, pathtmp)
-        mmoriginadj = mmread(pathtmp)
+    mmoriginadj, clusmemlist, clussizelist, corecluscandlist = coreclusQ(dic_mclresult, originadj)    
+    coreclushub, coreclusternumber, coreclus_values, coremapping, reverse_coremapping = mclus_anaysis(mmoriginadj, clusmemlist, clussizelist, corecluscandlist, defaultcorenum = 0)
+    corehubresult = {k: v for k, v in coreclus_values.items() if k[0] in [reverse_coremapping[coreclushub]] or k[1] in [reverse_coremapping[coreclushub]]}
+    corehubresult_list = {tuple(int(x) for x in k): float(v) for k, v in corehubresult.items()}
+    log.info(f"The adjacency across the members of the core cluster without the hub: {corehubresult_list}")
+    corenonhubresult =  {k: v for k, v in coreclus_values.items() if not k[0] in [reverse_coremapping[coreclushub]] and not k[1] in [reverse_coremapping[coreclushub]]}
+    corenonhubresult_list = {tuple(int(x) for x in k): float(v) for k, v in corenonhubresult.items()}
+    log.info(f"The adjacency between the hub and the dangling nodes in the core cluster: {corenonhubresult_list}")
+    combined = {**corenonhubresult, **corehubresult}
+    coreclusreconnection = dict(sorted(combined.items()))
+    renum_coreclusreconnection = {(reverse_coremapping[i], reverse_coremapping[j]): val for (i, j), val in coreclusreconnection.items()}
+    renum_coreclusreconnection_list = {tuple(int(x) for x in k): float(v) for k, v in renum_coreclusreconnection.items()}
+    log.info(f"The integrated adjacency sources in the corecluster are renumbered as an integer sequence for repeated MCL: {renum_coreclusreconnection_list}")
+    max_row = max(r for r, c in renum_coreclusreconnection.keys()) + 1
+    max_col = max(c for r, c in renum_coreclusreconnection.keys()) + 1
+    shape = (max_row, max_col)
+    rows, cols, data = zip(*[(r, c, v) for (r, c), v in renum_coreclusreconnection.items()])
+    core_sparse_matrix = csr_matrix((data, (rows, cols)), shape=shape)
+    srmcl_core_result = mclprocess(core_sparse_matrix)
+    renum_srmcl_core_result = {k: [coremapping[x] for x in v] for k, v in srmcl_core_result.items()}
+    log.info(f"The srmcl result focussing on the core cluter partionned: {renum_srmcl_core_result}")
+    tmp_clusmemlist = clusmemlist.copy()
+    tmp_clusmemlist.pop(coreclusternumber)
+    dividedcore = [j for i,j in renum_srmcl_core_result.items()]
+    srmcl_all_result_tmp= tmp_clusmemlist + dividedcore
+    srmcl_all_result = sorted([sorted(group) for group in srmcl_all_result_tmp], key=lambda x: x[0] if x else float('inf'))
+    log.info(f"The result of the srmcl is inserted into the non-core MCL cluster list and all clusters are newly sorted: {srmcl_all_result}")
+    if coreinfoonly == True:
+        return renum_srmcl_core_result
     else:
-        msg = f"Unsupported file or variable type: {originadj}"
-        log.error(msg)
-        raise ValueError(msg)
-    clusmemlist=[dic_mclresult[i] for i in range(len(dic_mclresult))]
-    clussizelist = [len(j) for j in clusmemlist]
-    corecluscandlist = np.where(np.array(clussizelist)>np.mean(clussizelist) + 2*np.std(clussizelist).tolist())[0].tolist()
-    if corecluscandlist==[]:
-        msg = f"Warning: There is no core cluster, so no need to run rmcl."
-        log.error(msg)
-        raise TypeError(msg)
-    else:
-        corecluscanddata_tmp = list(zip(corecluscandlist,[clussizelist[i] for i in corecluscandlist]))
-        log.info(f"The candidate(s) of the core cluster are: {corecluscanddata_tmp}")
-        corecluscanddata = sorted(corecluscanddata_tmp, key=lambda x: x[1], reverse=True)
-        log.info(f"The sorted candidate(s) of the core cluster are: {corecluscanddata}")
-        if len(corecluscanddata) >= defaultcorenum + 1:
-            coreclusternumber = corecluscanddata[defaultcorenum][0]
-        else:
-            msg = f"The number (other than 0) that the user assigned to the corecluster selected from the candidates, i.e. {defaultcorenum}, exceeds the extent of the possible corecluster set {len(corecluscanddata)}."
-            log.error(msg)
-            raise TypeError(msg)
-        log.info(f"Due to specification constraints, only one core cluster candidate (with the maximum number of members, if the default setting 0 was kept) is selected. The cluster number is as follows.: {coreclusternumber}")
-        G = nx.from_scipy_sparse_array(mmoriginadj)
-        deginfo = G.degree
-        clusmemdeginfo = [[deginfo[i] for i in clusmemlist[j]] for j in range(len(clusmemlist))]
-        max_indices = [np.argwhere(i == np.max(i)).flatten().tolist() for i in clusmemdeginfo]
-        allrepresentnodeslist = [clusmemlist[i][max_indices[i][0]] for i in range(len(max_indices))]
-        coreclustermember = clusmemlist[coreclusternumber]
-        log.info(f"The members of the core cluster are:{coreclustermember}")
-        coreclushub = allrepresentnodeslist[coreclusternumber]
-        log.info(f"The hub of the core cluster is: {coreclushub}")
-        values = {(i, j): v for i, j, v in zip(mmoriginadj.row, mmoriginadj.col, mmoriginadj.data)}
-        values_list = {tuple(int(x) for x in k): float(v) for k, v in values.items()}
-        log.info(f"All the adjacency information of the original network is: {values_list}")
-        coreclusrow = list(range(len(coreclustermember)))
-        coreclus_elem_set = set(coreclustermember)
-        coreclus_values = {k: v for k, v in values.items() if k[0] in coreclus_elem_set and k[1] in coreclus_elem_set}
-        coreclus_values_list = {tuple(int(x) for x in k): float(v) for k, v in coreclus_values.items()}
-        log.info(f"The values of the core cluster's inner connection_values: {coreclus_values_list}")
-        corecluscorespond = list(zip(coreclustermember,coreclusrow))
-        coremapping = {v: k for k, v in dict(corecluscorespond).items()}
-        reverse_coremapping = {v: k for k, v in coremapping.items()}
-        log.info(f"The mapping dictionary for the core cluster with the number sequence as keys and the original numbers as values: {coremapping}")
-        log.info(f"The reverse_coremapping with the original numbers as keys and the number sequence as values: {reverse_coremapping}")
-        corehubresult = {k: v for k, v in coreclus_values.items() if k[0] in [reverse_coremapping[coreclushub]] or k[1] in [reverse_coremapping[coreclushub]]}
-        corehubresult_list = {tuple(int(x) for x in k): float(v) for k, v in corehubresult.items()}
-        log.info(f"The adjacency across the members of the core cluster without the hub: {corehubresult_list}")
-        corenonhubresult =  {k: v for k, v in coreclus_values.items() if not k[0] in [reverse_coremapping[coreclushub]] and not k[1] in [reverse_coremapping[coreclushub]]}
-        corenonhubresult_list = {tuple(int(x) for x in k): float(v) for k, v in corenonhubresult.items()}
-        log.info(f"The adjacency between the hub and the dangling nodes in the core cluster: {corenonhubresult_list}")
-        combined = {**corenonhubresult, **corehubresult}
-        coreclusreconnection = dict(sorted(combined.items()))
-        renum_coreclusreconnection = {(reverse_coremapping[i], reverse_coremapping[j]): val for (i, j), val in coreclusreconnection.items()}
-        renum_coreclusreconnection_list = {tuple(int(x) for x in k): float(v) for k, v in renum_coreclusreconnection.items()}
-        log.info(f"The integrated adjacency sources in the corecluster are renumbered as an integer sequence for repeated MCL: {renum_coreclusreconnection_list}")
-        max_row = max(r for r, c in renum_coreclusreconnection.keys()) + 1
-        max_col = max(c for r, c in renum_coreclusreconnection.keys()) + 1
-        shape = (max_row, max_col)
-        rows, cols, data = zip(*[(r, c, v) for (r, c), v in renum_coreclusreconnection.items()])
-        core_sparse_matrix = csr_matrix((data, (rows, cols)), shape=shape)
-        srmcl_core_result = mclprocess(core_sparse_matrix)
-        renum_srmcl_core_result = {k: [coremapping[x] for x in v] for k, v in srmcl_core_result.items()}
-        log.info(f"The srmcl result focussing on the core cluter partionned: {renum_srmcl_core_result}")
-        tmp_clusmemlist = clusmemlist.copy()
-        tmp_clusmemlist.pop(coreclusternumber)
-        dividedcore = [j for i,j in renum_srmcl_core_result.items()]
-        srmcl_all_result_tmp= tmp_clusmemlist + dividedcore
-        srmcl_all_result = sorted([sorted(group) for group in srmcl_all_result_tmp], key=lambda x: x[0] if x else float('inf'))
-        log.info(f"The result of the srmcl is inserted into the non-core MCL cluster list and all clusters are newly sorted: {srmcl_all_result}")
-        if coreinfoonly == True:
-            return renum_srmcl_core_result
-        else:
-            return srmcl_all_result
+        return srmcl_all_result
 
 def rmcl_basic(*args, **kwargs):
     return rmcl_branching(*args, **kwargs)
