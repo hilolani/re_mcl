@@ -110,6 +110,16 @@ class SafeCSR(csr_matrix):
 
     __str__ = __repr__ 
 
+def save_safe_csr_to_mtx(safecsrmatrix, path: str, logger=None):
+    log = logger or logging.getLogger(__name__)
+    if hasattr(safecsrmatrix, "_csr"):
+        safecsrmatrix = safecsrmatrix._csr
+    if not isinstance(safecsrmatrix, csr_matrix):
+        raise TypeError(f"Expected csr_matrix or SafeCSR, got {type(matrix).__name__}")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    mmwrite(path, safecsrmatrix)
+    log.info(f"Saved CSR matrix to {path}")
+
 def adjacencyinfocheck(adjacencymatrix, logger = None):
     log = resolve_logger(logger, "matrix")
     print(f"log name: {log.name}")
@@ -364,16 +374,6 @@ def mclus_anaysis(mmoriginadj_, clusmemlist_, clussizelist_, corecluscandlist_, 
     log.info(f"The mapping dictionary for the core cluster with the number sequence as keys and the original numbers as values: {coremapping}")
     log.info(f"The reverse_coremapping with the original numbers as keys and the number sequence as values: {reverse_coremapping}")
     return coreclushub, coreclusternumber, coreclus_values, coremapping, reverse_coremapping, deginfo, clusmemdeginfo, max_indices, allrepresentnodeslist, coreclustermember, values
-    
-def save_safe_csr_to_mtx(safecsrmatrix, path: str, logger=None):
-    log = logger or logging.getLogger(__name__)
-    if hasattr(safecsrmatrix, "_csr"):
-        safecsrmatrix = safecsrmatrix._csr
-    if not isinstance(safecsrmatrix, csr_matrix):
-        raise TypeError(f"Expected csr_matrix or SafeCSR, got {type(matrix).__name__}")
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    mmwrite(path, safecsrmatrix)
-    log.info(f"Saved CSR matrix to {path}")
 
 def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse_process = False, logger = None):
     log = resolve_logger(logger, "mcl")
