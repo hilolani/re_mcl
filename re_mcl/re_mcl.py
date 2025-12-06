@@ -463,7 +463,7 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
                 return finalrmclresult_adjusted_total
             elif reverse_process == True:
                 tmp_rmclresult = {k: [noncoremapping[x] for x in v if x in noncoremapping] for k, v in rmclresult.items()}
-                finalrmclresult = [[clusinfo_from_nodes(cluslist, j)[0] for j in sublist] for sublist in tmp_rmclresult.values()]
+                finalrmclresult = [[clusinfo_from_nodes(dic_mclresult, j)[0] for j in sublist] for sublist in tmp_rmclresult.values()]
                 finalrmclresult_adjusted_total_tmp =  [[(i, set().union(*[vals for _, vals in tmp]))] for i, tmp in enumerate(finalrmclresult)]
                 finalrmclresult_adjusted_total = {k: sorted(list(v)) for sub in  finalrmclresult_adjusted_total_tmp for k, v in sub}
                 log.info(f"Final result of rmcl after renumbering--{algorithm}: reverse branching-rmcl result with only the representative nodes: {finalrmclresult}, reverse branching-rmcl result with all the non core members: {finalrmclresult_adjusted_total}")
@@ -518,7 +518,7 @@ def branching_rmcl(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
            return finalrmclresult_adjusted_total
         elif reverse_process == True:
            tmp_rmclresult = {k: [noncoremapping[x] for x in v if x in noncoremapping] for k, v in rmclresult.items()}
-           finalrmclresult = [[clusinfo_from_nodes(cluslist, j)[0] for j in sublist] for sublist in tmp_rmclresult.values()]
+           finalrmclresult = [[clusinfo_from_nodes(dic_mclresult, j)[0] for j in sublist] for sublist in tmp_rmclresult.values()]
            finalrmclresult_adjusted_total_tmp =  [[(i, set().union(*[vals for _, vals in tmp]))] for i, tmp in enumerate(finalrmclresult)]
            finalrmclresult_adjusted_total = {k: sorted(list(v)) for sub in  finalrmclresult_adjusted_total_tmp for k, v in sub}
            log.info(f"Final result of rmcl after renumbering--{algorithm}: reverse branching-rmcl result with only the representative nodes: {finalrmclresult}, reverse branching-rmcl result with all the non core members: {finalrmclresult_adjusted_total}")
