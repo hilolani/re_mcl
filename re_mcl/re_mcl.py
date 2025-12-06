@@ -301,6 +301,34 @@ def mclprocess(adjacencymatrixchecked, stepnum = 20, logger = None):
             break
         steps = steps + 1
 
+def coreclusQ(dic_mclresult_, originadj_, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    if isinstance(originadj_, str) and os.path.exists(originadj_):
+        mmoriginadj = mmread(originadj_)
+        log.info("The original adjacency information was given as an mtx file.")
+    elif isinstance(originadj_, SafeCSR):
+        log.info("The original adjacency information was given as a SafeCSR object.")
+        pathtmp = os.getcwd() + "/" + "tmp.mtx"
+        save_safe_csr_to_mtx(originadj_, pathtmp)
+        mmoriginadj = mmread(pathtmp)
+    else:
+        msg = f"Unsupported file or variable type: {originadj_}"
+        log.error(msg)
+        raise ValueError(msg)
+    clusmemlist=[dic_mclresult_[i] for i in range(len(dic_mclresult_))]
+    clussizelist = [len(j) for j in clusmemlist]
+    corecluscandlist = np.where(np.array(clussizelist)>np.mean(clussizelist) + 2*np.std(clussizelist).tolist())[0].tolist()
+    if corecluscandlist==[]:
+        msg = f"Warning: There is no core cluster, so no need to run futher rmcl."
+        log.error(msg)
+        raise TypeError(msg)
+    else:
+        log.info(f"There is a core cluster in this MCL result: {corecluscandlist}.")
+        return mmoriginadj, clusmemlist, clussizelist, corecluscandlist
+
+
+
 def save_safe_csr_to_mtx(safecsrmatrix, path: str, logger=None):
     log = logger or logging.getLogger(__name__)
     if hasattr(safecsrmatrix, "_csr"):
