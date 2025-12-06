@@ -327,7 +327,43 @@ def coreclusQ(dic_mclresult_, originadj_, logger = None):
         log.info(f"There is a core cluster in this MCL result: {corecluscandlist}.")
         return mmoriginadj, clusmemlist, clussizelist, corecluscandlist
 
-
+def mclus_anaysis(mmoriginadj_, clusmemlist_, clussizelist_, corecluscandlist_, defaultcorenum = 0, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    corecluscanddata_tmp = list(zip(corecluscandlist_,[clussizelist_[i] for i in corecluscandlist_]))
+    log.info(f"The candidate(s) of the core cluster are: {corecluscanddata_tmp}")
+    corecluscanddata = sorted(corecluscanddata_tmp, key=lambda x: x[1], reverse=True)
+    log.info(f"The sorted candidate(s) of the core cluster are: {corecluscanddata}")
+    if len(corecluscanddata) >= defaultcorenum + 1:
+        coreclusternumber = corecluscanddata[defaultcorenum][0]
+    else:
+        msg = f"The number (other than 0) that the user assigned to the corecluster selected from the candidates, i.e. {defaultcorenum}, exceeds the extent of the possible corecluster set {len(corecluscanddata)}."
+        log.error(msg)
+        raise TypeError(msg)
+    log.info(f"Due to specification constraints, only one core cluster candidate (with the maximum number of members, if the default setting 0 was kept) is selected. The cluster number is as follows.: {coreclusternumber}")
+    G = nx.from_scipy_sparse_array(mmoriginadj_)
+    deginfo = G.degree
+    clusmemdeginfo = [[deginfo[i] for i in clusmemlist_[j]] for j in range(len(clusmemlist_))]
+    max_indices = [np.argwhere(i == np.max(i)).flatten().tolist() for i in clusmemdeginfo]
+    allrepresentnodeslist = [clusmemlist_[i][max_indices[i][0]] for i in range(len(max_indices))]
+    coreclustermember = clusmemlist_[coreclusternumber]
+    log.info(f"The members of the core cluster are:{coreclustermember}")
+    coreclushub = allrepresentnodeslist[coreclusternumber]
+    log.info(f"The hub of the core cluster is: {coreclushub}")
+    values = {(i, j): v for i, j, v in zip(mmoriginadj_.row, mmoriginadj_.col, mmoriginadj_.data)}
+    values_list = {tuple(int(x) for x in k): float(v) for k, v in values.items()}
+    log.info(f"All the adjacency information of the original network is: {values_list}")
+    coreclusrow = list(range(len(coreclustermember)))
+    coreclus_elem_set = set(coreclustermember)
+    coreclus_values = {k: v for k, v in values.items() if k[0] in coreclus_elem_set and k[1] in coreclus_elem_set}
+    coreclus_values_list = {tuple(int(x) for x in k): float(v) for k, v in coreclus_values.items()}
+    log.info(f"The values of the core cluster's inner connection_values: {coreclus_values_list}")
+    corecluscorespond = list(zip(coreclustermember,coreclusrow))
+    coremapping = {v: k for k, v in dict(corecluscorespond).items()}
+    reverse_coremapping = {v: k for k, v in coremapping.items()}
+    log.info(f"The mapping dictionary for the core cluster with the number sequence as keys and the original numbers as values: {coremapping}")
+    log.info(f"The reverse_coremapping with the original numbers as keys and the number sequence as values: {reverse_coremapping}")
+    return coreclushub, coreclusternumber, coreclus_values, coremapping, reverse_coremapping
 
 def save_safe_csr_to_mtx(safecsrmatrix, path: str, logger=None):
     log = logger or logging.getLogger(__name__)
