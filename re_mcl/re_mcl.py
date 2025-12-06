@@ -378,6 +378,7 @@ def save_safe_csr_to_mtx(safecsrmatrix, path: str, logger=None):
 def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse_process = False, logger = None):
     log = resolve_logger(logger, "mcl")
     print(f"log name: {log.name}")
+    log.info(f"A little obsolete. Please use the branching_rmcl() function now.")
     if isinstance(originadj, str) and os.path.exists(originadj):
         mmoriginadj = mmread(originadj)
         log.info("The original adjacency information was given as an mtx file.")
@@ -468,6 +469,61 @@ def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
                 log.info(f"Final result of rmcl after renumbering--{algorithm}: reverse branching-rmcl result with only the representative nodes: {finalrmclresult}, reverse branching-rmcl result with all the non core members: {finalrmclresult_adjusted_total}")
                 return finalrmclresult_adjusted_total
 
+def branching_rmcl(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse_process = False, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    mmoriginadj, clusmemlist, clussizelist, corecluscandlist = coreclusQ(dic_mclresult, originadj)
+    _, coreclusternumber, _, _, _, deginfo, clusmemdeginfo, max_indices, allrepresentnodeslist,coreclustermember,values = mclus_anaysis(mmoriginadj, clusmemlist, clussizelist, corecluscandlist, defaultcorenum = 0)
+    allbutcorerepresentnodeslist = [elem for i, elem in enumerate(allrepresentnodeslist) if i !=coreclusternumber]
+    coreclusterbutrepresentmember = [elem for i, elem in enumerate(coreclustermember) if elem != allrepresentnodeslist[coreclusternumber]]
+    coreclusbutrepresentrow = list(range(len(coreclusterbutrepresentmember)))
+    allbutcoreclusrepresentcol = [i + coreclusbutrepresentrow[-1] + 1 for i in list(range(len(allbutcorerepresentnodeslist)))] 
+    coreclusbutrepresntcorespond  = list(zip(coreclusterbutrepresentmember,coreclusbutrepresentrow))
+    corebutrepresentmapping = {v: k for k, v in dict(coreclusbutrepresntcorespond).items()}
+    noncoreclusbutrepresentrow = list(range(len(allbutcorerepresentnodeslist)))
+    noncorecluscorespond = list(zip(allbutcorerepresentnodeslist,noncoreclusbutrepresentrow))
+    noncoremapping = {v: k for k, v in dict(noncorecluscorespond).items()}
+    comblist = list(itertools.product(coreclusterbutrepresentmember,allbutcorerepresentnodeslist))
+    results = [values.get(comblist, 0.0) for comblist in comblist]
+    focusedcomblist = list(itertools.product(coreclusbutrepresentrow, allbutcoreclusrepresentcol))
+    rows, cols = zip(*focusedcomblist)
+    cols = tuple([x - allbutcoreclusrepresentcol[0] for x in cols])
+    focused_sparse_mat = coo_matrix((results, (rows, cols)), shape=(len(coreclusterbutrepresentmember),len(allbutcorerepresentnodeslist)))
+    log.info(f"focused_sparse_mat size is: {focused_sparse_mat.shape[0]}, {focused_sparse_mat.shape[1]}")
+    focused_sparse_mat_csr = focused_sparse_mat.tocsr()
+    if reverse_process == False:
+        log.info("reverse_process: False. We are running branching MCL.")
+        algorithm = "branching mcl as core reclustering"
+        focusedlatentadj=focused_sparse_mat_csr @ focused_sparse_mat_csr.T
+    elif reverse_process == True:
+            log.info("reverse_process: True. We are running reverse branching MCL.")
+            algorithm = "reverse branching mcl as non-core reclustering"
+            focusedlatentadj=focused_sparse_mat_csr.T @ focused_sparse_mat_csr
+    log.info(f"The shape of the rmcl target csr matrix : {focusedlatentadj.shape}.")
+    focusedlatentadj.data[focusedlatentadj.data < threspruning] = 0.0
+    focusedlatentadj.setdiag(0.0)
+    focusedlatentadj.eliminate_zeros()
+    log.info("The target CSR matrix for RMCL has been created.")
+    log.info(f"RMCL: RMCL will start soon.")
+    rmclresult = mclprocess(focusedlatentadj)
+    log.info(f"rmcresult: {rmclresult}")
+    if rmclresult==None:
+        log.info(f"Warning: RMCL not possible.")
+    else:
+        if reverse_process == False:
+           finalrmclresult = {k: [corebutrepresentmapping[x] for x in v if x in corebutrepresentmapping] for k, v in rmclresult.items()}
+           finalresulttmp = finalrmclresult.copy()
+           finalrmclresult_adjusted_total = append_hub_to_recluscore(finalresulttmp,allrepresentnodeslist[coreclusternumber])
+           log.info(f"Final result of rmcl after renumbering--{algorithm}:branching-rmcl result without hub in the core cluster: {finalrmclresult}, branching-rmcl result with the hub behind the queue: {finalrmclresult_adjusted_total}")
+           return finalrmclresult_adjusted_total
+        elif reverse_process == True:
+           tmp_rmclresult = {k: [noncoremapping[x] for x in v if x in noncoremapping] for k, v in rmclresult.items()}
+           finalrmclresult = [[clusinfo_from_nodes(cluslist, j)[0] for j in sublist] for sublist in tmp_rmclresult.values()]
+           finalrmclresult_adjusted_total_tmp =  [[(i, set().union(*[vals for _, vals in tmp]))] for i, tmp in enumerate(finalrmclresult)]
+           finalrmclresult_adjusted_total = {k: sorted(list(v)) for sub in  finalrmclresult_adjusted_total_tmp for k, v in sub}
+           log.info(f"Final result of rmcl after renumbering--{algorithm}: reverse branching-rmcl result with only the representative nodes: {finalrmclresult}, reverse branching-rmcl result with all the non core members: {finalrmclresult_adjusted_total}")
+           return finalrmclresult_adjusted_total
+
 def sr_mcl(dic_mclresult, originadj, defaultcorenum=0, coreinfoonly = True, logger = None):
     log = resolve_logger(logger, "mcl")
     print(f"log name: {log.name}")
@@ -504,7 +560,7 @@ def sr_mcl(dic_mclresult, originadj, defaultcorenum=0, coreinfoonly = True, logg
         return srmcl_all_result
 
 def rmcl_basic(*args, **kwargs):
-    return rmcl_branching(*args, **kwargs)
+    return branching_rmcl(*args, **kwargs)
 
 def find_all_in_dict_lists(
     d: Dict[Any, List[Any]], 
