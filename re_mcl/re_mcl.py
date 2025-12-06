@@ -363,8 +363,8 @@ def mclus_anaysis(mmoriginadj_, clusmemlist_, clussizelist_, corecluscandlist_, 
     reverse_coremapping = {v: k for k, v in coremapping.items()}
     log.info(f"The mapping dictionary for the core cluster with the number sequence as keys and the original numbers as values: {coremapping}")
     log.info(f"The reverse_coremapping with the original numbers as keys and the number sequence as values: {reverse_coremapping}")
-    return coreclushub, coreclusternumber, coreclus_values, coremapping, reverse_coremapping
-
+    return coreclushub, coreclusternumber, coreclus_values, coremapping, reverse_coremapping, deginfo, clusmemdeginfo, max_indices, allrepresentnodeslist, coreclustermember, values
+    
 def save_safe_csr_to_mtx(safecsrmatrix, path: str, logger=None):
     log = logger or logging.getLogger(__name__)
     if hasattr(safecsrmatrix, "_csr"):
@@ -472,7 +472,7 @@ def sr_mcl(dic_mclresult, originadj, defaultcorenum=0, coreinfoonly = True, logg
     log = resolve_logger(logger, "mcl")
     print(f"log name: {log.name}")
     mmoriginadj, clusmemlist, clussizelist, corecluscandlist = coreclusQ(dic_mclresult, originadj)    
-    coreclushub, coreclusternumber, coreclus_values, coremapping, reverse_coremapping = mclus_anaysis(mmoriginadj, clusmemlist, clussizelist, corecluscandlist, defaultcorenum = 0)
+    coreclushub, coreclusternumber, coreclus_values, coremapping, reverse_coremapping, _, _, _, _, _, _ = mclus_anaysis(mmoriginadj, clusmemlist, clussizelist, corecluscandlist, defaultcorenum = 0)
     corehubresult = {k: v for k, v in coreclus_values.items() if k[0] in [reverse_coremapping[coreclushub]] or k[1] in [reverse_coremapping[coreclushub]]}
     corehubresult_list = {tuple(int(x) for x in k): float(v) for k, v in corehubresult.items()}
     log.info(f"The adjacency across the members of the core cluster without the hub: {corehubresult_list}")
