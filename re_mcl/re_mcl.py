@@ -564,6 +564,33 @@ def sr_mcl(dic_mclresult, originadj, defaultcorenum=0, coreinfoonly = True, logg
     else:
         return srmcl_all_result
 
+def mixed_rmcl(dic_mclresult, originadj, threspruning, defaultcorenum = 0, branching = True, reverse_process = True, coreinfoonly = True, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    core_result = sr_mcl(dic_mclresult, originadj, defaultcorenum, coreinfoonly)
+    log.info(f"core_result: {core_result}")
+    core_partition = sorted([sorted(group) for group in  [j for i,j in core_result.items()]], key=lambda x: x[0] if x else float('inf'))
+    log.info(f"core cluster partitioning finished: {core_partition}")
+    log.info(f"Now non core cluster partitioning started")
+    if branching == True:
+        log.info(f"Reverse branching MCL started.")
+        non_core_result =  branching_rmcl(dic_mclresult, originadj, threspruning, defaultcorenum, reverse_process)
+        log.info(f"non_core_result: {non_core_result}")
+        non_core_partition = sorted([sorted(group) for group in  [j for i,j in non_core_result.items()]], key=lambda x: x[0] if x else float('inf'))
+        log.info(f"non_core clusters partitioning finished: {non_core_partition}")
+    else:
+        log.info(f"Non core clusters insterted just as they are.")
+        mcl_resultlist = sorted([sorted(group) for group in  [j for i,j in dic_mclresult.items()]], key=lambda x: x[0] if x else float('inf'))
+        set_mcl_resultlist = set(tuple(x) for x in mcl_resultlist)
+        flattened_core_partition = sorted([item for sublist in core_partition for item in sublist])
+        set_core_partition = {tuple(flattened_core_partition)}
+        semi_non_core_result_tmp = set_mcl_resultlist-set_core_partition
+        non_core_partition =  [sorted(tup) for tup in sorted(semi_non_core_result_tmp, key=lambda x: x[0])]
+    all_result_tmp = core_partition + non_core_partition
+    all_result = sorted([sorted(group) for group in all_result_tmp], key=lambda x: x[0] if x else float('inf'))
+    log.info(f"partition merge: {all_result}")
+    return all_result
+
 def rmcl_basic(*args, **kwargs):
     return branching_rmcl(*args, **kwargs)
 
