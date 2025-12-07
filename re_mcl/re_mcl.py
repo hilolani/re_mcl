@@ -358,6 +358,10 @@ def mclus_anaysis(mmoriginadj_, clusmemlist_, clussizelist_, corecluscandlist_, 
     allrepresentnodeslist = [clusmemlist_[i][max_indices[i][0]] for i in range(len(max_indices))]
     coreclustermember = clusmemlist_[coreclusternumber]
     log.info(f"The members of the core cluster are:{coreclustermember}")
+    noncoreclusternumber = [i for i in range(len(clusmemlist_)) if i not in [coreclusternumber]]
+    log.info(f"The numbering of the noncore clusters, noncoreclusternumber is:{noncoreclusternumber}")
+    noncoreclustermember = [clusmemlist_[i] for i in noncoreclusternumber]
+    log.info(f"The members of the noncore cluster, noncoreclustermember are: {noncoreclustermember}")
     coreclushub = allrepresentnodeslist[coreclusternumber]
     log.info(f"The hub of the core cluster is: {coreclushub}")
     values = {(i, j): v for i, j, v in zip(mmoriginadj_.row, mmoriginadj_.col, mmoriginadj_.data)}
@@ -373,7 +377,8 @@ def mclus_anaysis(mmoriginadj_, clusmemlist_, clussizelist_, corecluscandlist_, 
     reverse_coremapping = {v: k for k, v in coremapping.items()}
     log.info(f"The mapping dictionary for the core cluster with the number sequence as keys and the original numbers as values: {coremapping}")
     log.info(f"The reverse_coremapping with the original numbers as keys and the number sequence as values: {reverse_coremapping}")
-    return coreclushub, coreclusternumber, coreclus_values, coremapping, reverse_coremapping, deginfo, clusmemdeginfo, max_indices, allrepresentnodeslist, coreclustermember, values
+    return coreclushub, coreclusternumber, coreclus_values, coremapping, reverse_coremapping, deginfo, clusmemdeginfo, max_indices, allrepresentnodeslist, coreclustermember, values, noncoreclusternumber, noncoreclustermember
+  
 
 def rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse_process = False, logger = None):
     log = resolve_logger(logger, "mcl")
@@ -473,7 +478,7 @@ def branching_rmcl(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0,
     log = resolve_logger(logger, "mcl")
     print(f"log name: {log.name}")
     mmoriginadj, clusmemlist, clussizelist, corecluscandlist = coreclusQ(dic_mclresult, originadj)
-    _, coreclusternumber, _, _, _, deginfo, clusmemdeginfo, max_indices, allrepresentnodeslist,coreclustermember,values = mclus_anaysis(mmoriginadj, clusmemlist, clussizelist, corecluscandlist, defaultcorenum = 0)
+    _, coreclusternumber, _, _, _, deginfo, clusmemdeginfo, max_indices, allrepresentnodeslist,coreclustermember,values, _, _ = mclus_anaysis(mmoriginadj, clusmemlist, clussizelist, corecluscandlist, defaultcorenum = 0)
     allbutcorerepresentnodeslist = [elem for i, elem in enumerate(allrepresentnodeslist) if i !=coreclusternumber]
     coreclusterbutrepresentmember = [elem for i, elem in enumerate(coreclustermember) if elem != allrepresentnodeslist[coreclusternumber]]
     coreclusbutrepresentrow = list(range(len(coreclusterbutrepresentmember)))
@@ -528,7 +533,7 @@ def sr_mcl(dic_mclresult, originadj, defaultcorenum=0, coreinfoonly = True, logg
     log = resolve_logger(logger, "mcl")
     print(f"log name: {log.name}")
     mmoriginadj, clusmemlist, clussizelist, corecluscandlist = coreclusQ(dic_mclresult, originadj)    
-    coreclushub, coreclusternumber, coreclus_values, coremapping, reverse_coremapping, _, _, _, _, _, _ = mclus_anaysis(mmoriginadj, clusmemlist, clussizelist, corecluscandlist, defaultcorenum = 0)
+    coreclushub, coreclusternumber, coreclus_values, coremapping, reverse_coremapping, _, _, _, _, _, _, _, _ = mclus_anaysis(mmoriginadj, clusmemlist, clussizelist, corecluscandlist, defaultcorenum = 0)
     corehubresult = {k: v for k, v in coreclus_values.items() if k[0] in [reverse_coremapping[coreclushub]] or k[1] in [reverse_coremapping[coreclushub]]}
     corehubresult_list = {tuple(int(x) for x in k): float(v) for k, v in corehubresult.items()}
     log.info(f"The adjacency across the members of the core cluster without the hub: {corehubresult_list}")
