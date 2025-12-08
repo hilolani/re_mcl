@@ -624,3 +624,44 @@ def append_hub_to_recluscore(rmclresultcore,hubnumlist):
         rmclresultcore[lenrmclresultcore + i] = [tobeadded[i]]
         print(i)
     return rmclresultcore
+
+def log_communities_for_set_of_tuples(communities_set, label="detected tuples after sorting", logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    if not communities_set:
+        log.info("%s: nothing", label)
+        return
+    sorted_comms = sorted(tuple(sorted(t)) for t in communities_set)
+    lines = [f"{label}:"]
+    for tup in sorted_comms:
+        if len(tup) <= 10:  
+            lines.append(f"  {tup}")
+        else:
+            chunks = [tup[i:i+8] for i in range(0, len(tup), 8)]
+            first_line = f"  ({', '.join(map(str, chunks[0]))},"
+            lines.append(first_line)
+            for chunk in chunks[1:-1]:
+                lines.append(f"   {', '.join(map(str, chunk))},") 
+            last_chunk = chunks[-1]
+            lines.append(f"   {', '.join(map(str, last_chunk))}),")   
+    lines.append("  total: {} tuples".format(len(sorted_comms)))
+    log.info("\n" + "\n".join(lines))
+
+def mcldict_to_mclset(dic_mclresult_,logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    list_mclresult = sorted([sorted(group) for group in  [j for i,j in dic_mclresult_.items()]], key=lambda x: x[0] if x else float('inf'))
+    log.info(f"The dict format for representing the MCL result was coverted into list type before the set calculation. list_mclresult: {list_mclresult}")
+    set_mclresult = set(tuple(x) for x in list_mclresult)
+    log.info(f"The set format treats lists as sets and is useful for operations that extract the intersection or union between two nested lists. set_mclresult: {set_mclresult}")
+    log_communities_for_set_of_tuples(set_mclresult)
+    return list_mclresult, set_mclresult
+
+def mclset_to_mcldict(set_mclresult_,logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    list_mclresult = sorted(list([list(i) for i in set_mclresult_]))
+    log.info(f"The set format for representing the MCL result was coverted into list. list_mclresult: {list_mclresult}")
+    dict_mclresult = dict(enumerate(list_mclresult))
+    log.info(f"The set format for representing the MCL result was coverted into dict. dict_mclresult: {dict_mclresult}")
+    return list_mclresult, dict_mclresult
