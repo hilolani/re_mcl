@@ -580,8 +580,7 @@ def mixed_rmcl(dic_mclresult, originadj, threspruning, defaultcorenum = 0, branc
         log.info(f"non_core clusters partitioning finished: {non_core_partition}")
     else:
         log.info(f"Non core clusters insterted just as they are.")
-        mcl_resultlist = sorted([sorted(group) for group in  [j for i,j in dic_mclresult.items()]], key=lambda x: x[0] if x else float('inf'))
-        set_mcl_resultlist = set(tuple(x) for x in mcl_resultlist)
+        _, set_mcl_resultlist = mcldict_to_mclset(dic_mclresult)
         flattened_core_partition = sorted([item for sublist in core_partition for item in sublist])
         set_core_partition = {tuple(flattened_core_partition)}
         semi_non_core_result_tmp = set_mcl_resultlist-set_core_partition
