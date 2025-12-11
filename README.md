@@ -39,7 +39,7 @@ Also good if you are using Google Colab.
     
     #The clusters other than the core one is size-adjusted (appropriately merged) based on the algorithm of Reverse granching RMCL.
 
-# rmcl_branching
+# branching_rmcl
 This function's specification is as follows.
 
     branching_rmcl(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse_process = False, logger = None):
