@@ -54,6 +54,9 @@ The fourth argument, threspruning, refers to the threshold for latent adjacency 
 
 The fifth argument, `reverse_process`, has a default value of `False`. If `False`, it performs standard branching MCL for core cluster partitioning. If `True`, it instead performs reverse branching MCL, which appropriately re-merges clusters other than the core clusters.
 
+# srmcl
+Simply-repeated MCL, abbreviated as srmcl, operates as follows: if a core cluster exists, it extracts the hub with the highest degree from within it and then re-runs MCL iteratively only on the core cluster. In the sr_mcl() function, due to its specification, even if multiple core clusters exist, srmcl is applied only to the largest one among them. Clusters other than the core cluster retain the results from the initial MCL. If coreinfoonly = False (default is True), non-core clusters are merged into the srmcl results.
+
 # Ingenuity:
 The output of MCL typically takes the form of a Python dictionary, where the key is the cluster number and the value represents the nodes (vertices) belonging to that cluster. However, to simplify calculations, functions such as `mcldict_to_mcllist()` and `mcldict_to_mclset()` are provided to convert this dict-formatted `mclresult` into either nested list format or set format, which can output unions or intersections between clusters.
 
