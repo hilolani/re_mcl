@@ -57,6 +57,8 @@ The fifth argument, `reverse_process`, has a default value of `False`. If `False
 # Ingenuity:
 The output of MCL typically takes the form of a Python dictionary, where the key is the cluster number and the value represents the nodes (vertices) belonging to that cluster. However, to simplify calculations, functions such as `mcldict_to_mcllist()` and `mcldict_to_mclset()` are provided to convert this dict-formatted `mclresult` into either nested list format or set format, which can output unions or intersections between clusters.
 
+This MCL program uses CSR (Compressed Sparse Row) format as the default sparse matrix representation, but it may convert to COO (Coordinate) format during computation. Then, assing the original object as it is to the logger would result in massive amounts of Row indices, Column indices, and Values being displayed in the log file and standard output. Therefore, a SafeCSR class is implemented to suppress this inconvenient behavior.
+
 # Notes:
 The following is the basic algorithm of MCL and Branching MCL (based on the latent adjacency between the core cluster and the others.) The reverse Branching MCL consists of appropriately consolidating other fragmented clusters by swapping the order of the matrices to compute the product for PathNumbersMatrix such as n = Tr(CC’ n_RCS’k) * CC’ n_RCS’k.
 
