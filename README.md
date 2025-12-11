@@ -42,7 +42,7 @@ Also good if you are using Google Colab.
 # rmcl_branching
 This function's specification is as follows.
 
-    rmcl_branching(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse_process = False, logger = None):
+    branching_rmcl(dic_mclresult, originadj, defaultcorenum=0, threspruning=1.0, reverse_process = False, logger = None):
 
 The first argument, `dic_mclresult`, directly assigns the return value of the `mcl_process()` function.
 
@@ -54,6 +54,8 @@ The fourth argument, threspruning, refers to the threshold for latent adjacency 
 
 The fifth argument, `reverse_process`, has a default value of `False`. If `False`, it performs standard branching MCL for core cluster partitioning. If `True`, it instead performs reverse branching MCL, which appropriately re-merges clusters other than the core clusters.
 
+# Ingenuity:
+The output of MCL typically takes the form of a Python dictionary, where the key is the cluster number and the value represents the nodes (vertices) belonging to that cluster. However, to simplify calculations, functions such as `mcldict_to_mcllist()` and `mcldict_to_mclset()` are provided to convert this dict-formatted `mclresult` into either nested list format or set format, which can output unions or intersections between clusters.
 
 # Notes:
 The following is the basic algorithm of MCL and Branching MCL (based on the latent adjacency between the core cluster and the others.) The reverse Branching MCL consists of appropriately consolidating other fragmented clusters by swapping the order of the matrices to compute the product for PathNumbersMatrix such as n = Tr(CC’ n_RCS’k) * CC’ n_RCS’k.
