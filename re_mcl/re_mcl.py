@@ -665,3 +665,33 @@ def mclset_to_mcldict(set_mclresult_,logger = None):
     dict_mclresult = dict(enumerate(list_mclresult))
     log.info(f"The set format for representing the MCL result was coverted into dict. dict_mclresult: {dict_mclresult}")
     return list_mclresult, dict_mclresult
+
+def mcldict_to_mcllist(dic_mclresult_, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    list_mclresult = sorted([sorted(group) for group in  [j for i,j in dic_mclresult_.items()]], key=lambda x: x[0] if x else float('inf'))
+    log.info(f"The mcl result of which the type is dict was converted to a nested list mcllist: {list_mclresult}")
+    return mcllist
+
+def mcllist_to_mclset(list_mclresult_, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    set_mclresult = set(tuple(x) for x in list_mclresult_)
+    log.info(f"The set format treats lists as sets and is useful for operations that extract the intersection or union between two nested lists. set_mclresult: {set_mclresult}")
+    log_communities_for_set_of_tuples(set_mclresult)
+    return set_mclresult
+
+def mcllist_to_mcldict(list_mclresult_, logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    dict_mclresult = dict(enumerate(list_mclresult_))
+    log.info(f"The list format for representing the MCL result was coverted into dict. dict_mclresult: {dict_mclresult}")
+    return dict_mclresult
+
+def mclset_to_mcllist(set_mclresult_,  logger = None):
+    log = resolve_logger(logger, "mcl")
+    print(f"log name: {log.name}")
+    list_mclresult = sorted(list([list(i) for i in set_mclresult_]))
+    log.info(f"The set format for representing the MCL result was coverted into list. list_mclresult: {list_mclresult}")
+    return list_mclresult
+   
