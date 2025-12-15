@@ -671,7 +671,7 @@ def mcldict_to_mcllist(dic_mclresult_, logger = None):
     print(f"log name: {log.name}")
     list_mclresult = sorted([sorted(group) for group in  [j for i,j in dic_mclresult_.items()]], key=lambda x: x[0] if x else float('inf'))
     log.info(f"The mcl result of which the type is dict was converted to a nested list mcllist: {list_mclresult}")
-    return mcllist
+    return list_mclresult
 
 def mcllist_to_mclset(list_mclresult_, logger = None):
     log = resolve_logger(logger, "mcl")
