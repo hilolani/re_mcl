@@ -69,6 +69,21 @@ The output of MCL typically takes the form of a Python dictionary, where the key
 
 This MCL program uses CSR (Compressed Sparse Row) format as the default sparse matrix representation, but it may convert to COO (Coordinate) format during computation. Then, assigning the original object as it is to the logger would result in massive amounts of Row indices, Column indices, and Values being displayed in the log file and standard output. Therefore, a SafeCSR class is implemented to suppress this inconvenient behavior.
 
+# Usage Example
+
+    #Scale free graph.
+    cluslist = mclprocess(adjacencyinfocheckedlist[3], 20)
+    resultcore = branching_rmcl(cluslist,adjacencyinfocheckedlist[3],threspruning=1,reverse_process=False)
+    #Same as
+    #resultcore = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],threspruning=1,reverse_process=False)
+    resultnoncore = rmcl_basic(cluslist,adjacencyinfocheckedlist[3],threspruning=3,reverse_process=True)
+    result_srcore = sr_mcl(cluslist,adjacencyinfocheckedlist[3])
+    result_srall = sr_mcl(cluslist,adjacencyinfocheckedlist[3], coreinfoonly = False)
+    mixed_result =  mixed_rmcl(cluslist, adjacencyinfocheckedlist[3], threspruning = 3.0, branching = False)
+
+    result_srall_dict = mcllist_to_mcldict(result_srall)
+    mixed_result_dict = mcllist_to_mcldict(mixed_result)
+
 # Notes:
 The following is the basic algorithm of MCL and Branching MCL (based on the latent adjacency between the core cluster and the others.) The reverse Branching MCL consists of appropriately consolidating other fragmented clusters by swapping the order of the matrices to compute the product for PathNumbersMatrix such as n = Tr(CC’ n_RCS’k) * CC’ n_RCS’k.
 
