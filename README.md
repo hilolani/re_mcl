@@ -1,4 +1,7 @@
 # re_mcl
+
+The Markov Cluster Algorithm (MCL), proposed by Van Dongen, is a fast, scalable, and high-quality method for graph clustering (community detection) based on the simulation of random walks on graphs. MCL models random walks using two simple algebraic matrix operations, known as expansion and contraction. Expansion corresponds to standard matrix multiplication, while contraction combines Hadamard (element-wise) multiplication with rescaling. By alternately applying these two operations, MCL partitions a graph into a fixed number of disjoint subgraphs.
+
 This is a Python program for Markov Clustering (MCL) that supports not only dense matrices (to be automatically converted to CSR format) but also sparse matrices (can read Matrix Market mtx files). The convergence process can also be reproduced using the logger protocol. Run
 
     pip install git+https://github.com/hilolani/re_mcl.git
@@ -19,7 +22,36 @@ Several adjacent matrices for demonstration purposes are stored in this reposito
 
     mclprocess(re_mcl.karateclub)
 
-In addition to the conventional MCL, Recurrent MCL (RMCL), developed at the former Akama Laboratory at Tokyo Institute of Technology, has been implemented in this repository and can be computed as follows with the new function of rmcl_basic(). BMCL (Branching Markov Clustering) as a part of RMCL (recurrent MCL) algorithm allows us to overcome a weak point--clusters size unbalance--of the ordinary MCL revealed particularly specifically when it is applied to a document or a corpus. BMCL makes it possible to subdivide a large core cluster into appropriately resized sub-graphs. It consists of creating a virtual adjacency relationship among the Markov hard clusters and producing intrinsically informative complex networks.
+When applied to semantic networks, such as those constructed from word co-occurrence relationships, MCL often produces clusters that correspond to meaningful conceptual categories.
+
+This library implements the conventional MCL algorithm and additionally provides an extended algorithm called Recurrent MCL (RMCL), originally developed at the former Akama Laboratory at Tokyo Institute of Technology. RMCL can be executed via the function rmcl_basic().
+
+A key component of RMCL is Branching Markov Clustering (BMCL), which addresses a well-known limitation of standard MCL: severe cluster size imbalance. This issue becomes particularly pronounced in graphs exhibiting scale-free and heterophilic characteristics.
+
+Core Clusters and Core Hubs
+
+In graphs whose degree distributions approximately follow a power law—such as semantic networks derived from large language corpora—standard MCL often produces one extremely large cluster alongside many small ones. We refer to this large cluster as the core cluster. The node with the highest degree within the core cluster is designated as the core hub.
+
+BMCL enables the division of such oversized core clusters into appropriately sized subgraphs. It achieves this by introducing latent adjacency relationships between Markov clusters, thereby reconstructing a more informative network structure.
+
+Latent Adjacency Construction
+
+To discover new relationships between Markov clusters, BMCL utilizes both the core cluster and the smaller, non-core clusters adjacent to it. From each Markov cluster, the node with the maximum degree is selected as a representative node (hub).
+
+Using the adjacency matrix of the original graph, latent adjacency information is computed, and MCL is reapplied to this reconstructed adjacency matrix.
+
+Splitting Large Core Clusters
+
+First, BMCL identifies existing connections between non-corehub nodes within the core cluster and representative hubs of other Markov clusters. It then determines whether two non-corehub nodes in the core cluster can be virtually connected via a representative hub of an external Markov cluster within two hops, and counts the number of such distinct paths.
+
+These inferred connections are interpreted as latent adjacencies between node pairs inside the core cluster. To divide the core cluster into balanced subclusters, MCL is reapplied to the resulting latent adjacency matrix.
+
+Merging Small Non-Core Clusters (Reverse Branching)
+
+BMCL also supports the merging of small, non-core clusters through a process known as reverse branching. In this step, connections between the core hub and representative hubs of non-core clusters are examined. BMCL determines whether two representative hubs can be connected via the core hub within two hops, and if so, how many distinct paths exist.
+
+These inferred two-hop connections are likewise treated as latent adjacency information. MCL is then applied to this latent adjacency matrix, enabling the merging of small non-core clusters into larger, more meaningful structures.
+
 
     cluslist = mclprocess(re_mcl.scalefree, 20)
 
