@@ -36,7 +36,7 @@ In graphs whose degree distributions approximately follow a power law—such as 
 
 BMCL enables the division of such oversized core clusters into appropriately sized subgraphs. It achieves this by introducing latent adjacency relationships between Markov clusters, thereby reconstructing a more informative network structure.
 
-Latent Adjacency Construction
+## Latent Adjacency Construction
 
 To discover new relationships between Markov clusters, BMCL utilizes both the core cluster and the smaller, non-core clusters adjacent to it. From each Markov cluster, the node with the maximum degree is selected as a representative node (hub).
 
