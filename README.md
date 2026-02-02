@@ -1,3 +1,7 @@
+# Notice
+
+This repository is superseded by MarkovRCnet, which integrates and extends algorithms originally developed here.
+
 # re_mcl
 
 ## MCL
